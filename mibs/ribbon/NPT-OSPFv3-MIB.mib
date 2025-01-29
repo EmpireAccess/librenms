@@ -1,0 +1,519 @@
+
+-- File Name : NPT-OSPFv3-MIB
+-- Date      : Tue Dec 20 10:00:00 CST 2020
+-- Author    : Haoyang Xu
+
+
+
+NPT-OSPFv3-MIB	DEFINITIONS ::= BEGIN
+	IMPORTS
+	    nptOSPFv3
+	            FROM NPT-ROOT-MIB
+            MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE, mib-2,
+            Counter32, Gauge32, Integer32, Unsigned32
+                    FROM SNMPv2-SMI
+            TEXTUAL-CONVENTION, TruthValue, RowStatus, TimeStamp
+                    FROM SNMPv2-TC
+            MODULE-COMPLIANCE, OBJECT-GROUP, NOTIFICATION-GROUP
+                    FROM SNMPv2-CONF
+            InterfaceIndex
+                    FROM IF-MIB
+            InetAddressType, InetAddress, InetAddressPrefixLength,
+            InetAddressIPv6
+                    FROM INET-ADDRESS-MIB
+            Metric, BigMetric, Status,
+            HelloRange, DesignatedRouterPriority
+                    FROM OSPF-MIB
+            Ospfv3UpToRefreshIntervalTC, Ospfv3IfInstIdTC, Ospfv3RouterIdTC, Ospfv3AreaIdTC
+                    FROM OSPFV3-MIB;
+                 
+    nptospfv3 MODULE-IDENTITY
+        LAST-UPDATED "202012020000Z"
+        ORGANIZATION "Ribbon Communications Inc."
+        CONTACT-INFO "on.support@rbbn.com 
+                         Ribbon Communications Inc.,China
+                         Dongxin Tower, No.398 Wensan Road, 
+                         Hangzhou, 310012 P.R.China"
+        DESCRIPTION  "Description"
+		REVISION	 "01Z"
+		DESCRIPTION	 ""
+		::=  {  nptOSPFv3  1  }
+
+    -- Objects
+    nptospfv3Objects OBJECT IDENTIFIER ::= { nptospfv3 1 }
+
+    -- OSPFv3 Neighbor Table
+
+    ospfv3NbrTable OBJECT-TYPE
+            SYNTAX          SEQUENCE OF Ospfv3NbrEntry
+            MAX-ACCESS      not-accessible
+            STATUS          current
+            DESCRIPTION
+                "A table describing all neighbors in the
+                locality of the OSPFv3 router."
+            REFERENCE
+                "OSPF Version 2, Section 10, The Neighbor Data
+                Structure"
+            ::= { nptospfv3Objects 1 }
+
+    ospfv3NbrEntry OBJECT-TYPE
+            SYNTAX          Ospfv3NbrEntry
+            MAX-ACCESS      not-accessible
+            STATUS          current
+            DESCRIPTION
+                "The information regarding a single neighbor."
+            REFERENCE
+                "OSPF Version 2, Section 10, The Neighbor Data
+                Structure"
+            INDEX           { ospfv3NbrIfIndex,
+                              ospfv3NbrIfInstId,
+                              ospfv3NbrRtrId,
+                              ospfv3NbrInstanceIndex}
+            ::= { ospfv3NbrTable 1 }
+
+    Ospfv3NbrEntry ::= SEQUENCE {
+            ospfv3NbrIfIndex
+                    InterfaceIndex,
+            ospfv3NbrIfInstId
+                    Ospfv3IfInstIdTC,
+            ospfv3NbrRtrId
+                    Ospfv3RouterIdTC,
+            ospfv3NbrInstanceIndex
+                    Counter32,
+            ospfv3NbrAddressType
+                    InetAddressType,
+            ospfv3NbrAddress
+                    InetAddress,
+            ospfv3NbrOptions
+                    Integer32,
+            ospfv3NbrPriority
+                    DesignatedRouterPriority,
+            ospfv3NbrState
+                    INTEGER,
+            ospfv3NbrEvents
+                    Counter32,
+            ospfv3NbrLsRetransQLen
+                    Gauge32,
+            ospfv3NbrHelloSuppressed
+                    TruthValue,
+            ospfv3NbrIfId
+                    InterfaceIndex,
+            ospfv3NbrRestartHelperStatus
+                    INTEGER,
+            ospfv3NbrRestartHelperAge
+                    Ospfv3UpToRefreshIntervalTC,
+            ospfv3NbrRestartHelperExitReason
+                    INTEGER
+            }
+
+    ospfv3NbrIfIndex OBJECT-TYPE
+            SYNTAX          InterfaceIndex
+            MAX-ACCESS      read-only
+            STATUS          current
+            DESCRIPTION
+                "The Local Link ID of the link over which the
+                 neighbor can be reached."
+            ::= { ospfv3NbrEntry 1 }
+
+    ospfv3NbrIfInstId OBJECT-TYPE
+            SYNTAX          Ospfv3IfInstIdTC
+            MAX-ACCESS      read-only
+            STATUS          current
+            DESCRIPTION
+                "Interface instance over which the neighbor
+                can be reached.  This ID has local link
+                significance only."
+            ::= { ospfv3NbrEntry 2 }
+
+    ospfv3NbrRtrId OBJECT-TYPE
+            SYNTAX          Ospfv3RouterIdTC
+            MAX-ACCESS      read-only
+            STATUS          current
+            DESCRIPTION
+                "A 32-bit unsigned integer uniquely identifying the
+                neighboring router in the Autonomous System."
+            ::= { ospfv3NbrEntry 3 }
+
+    ospfv3NbrInstanceIndex OBJECT-TYPE
+            SYNTAX          Counter32
+            MAX-ACCESS      read-only
+            STATUS          current
+            DESCRIPTION
+                "oid transform from instance name."
+            ::= { ospfv3NbrEntry 4 }
+
+    ospfv3NbrAddressType OBJECT-TYPE
+            SYNTAX          InetAddressType
+            MAX-ACCESS      read-only
+            STATUS          current
+            DESCRIPTION
+                "The address type of ospfv3NbrAddress.  Only IPv6
+                addresses without zone index are expected."
+            ::= { ospfv3NbrEntry 5 }
+
+    ospfv3NbrAddress OBJECT-TYPE
+            SYNTAX          InetAddress
+            MAX-ACCESS      read-only
+            STATUS          current
+            DESCRIPTION
+                "The IPv6 address of the neighbor associated with
+                the local link."
+            ::= { ospfv3NbrEntry 6 }
+
+    ospfv3NbrOptions OBJECT-TYPE
+            SYNTAX          Integer32
+            MAX-ACCESS      read-only
+            STATUS          current
+            DESCRIPTION
+                "A bit mask corresponding to the neighbor's
+                options field."
+            REFERENCE
+                "OSPF for IPv6, Appendix A.2, The Options Field"
+            ::= { ospfv3NbrEntry 7 }
+
+    ospfv3NbrPriority OBJECT-TYPE
+            SYNTAX          DesignatedRouterPriority
+            MAX-ACCESS      read-only
+            STATUS          current
+            DESCRIPTION
+                "The priority of this neighbor in the designated-
+                router election algorithm.  The value 0 signifies
+                that the neighbor is not eligible to become the
+                Designated Router on this particular network."
+            ::= { ospfv3NbrEntry 8 }
+
+    ospfv3NbrState OBJECT-TYPE
+            SYNTAX          INTEGER {
+                            down(1),
+                            attempt(2),
+                            init(3),
+                            twoWay(4),
+                            exchangeStart(5),
+                            exchange(6),
+                            loading(7),
+                            full(8)
+                            }
+            MAX-ACCESS      read-only
+            STATUS          current
+            DESCRIPTION
+                "The state of the relationship with this
+                neighbor."
+            REFERENCE
+                "OSPF Version 2, Section 10.1, Neighbor states"
+            ::= { ospfv3NbrEntry 9 }
+
+    ospfv3NbrEvents OBJECT-TYPE
+            SYNTAX          Counter32
+            MAX-ACCESS      read-only
+            STATUS          current
+            DESCRIPTION
+                "The number of times this neighbor relationship
+                has changed state or an error has occurred.
+                Discontinuities in the value of this counter
+                can occur at re-initialization of the management
+                system and at other times as indicated by the
+                value of ospfv3DiscontinuityTime."
+            ::= { ospfv3NbrEntry 10 }
+
+    ospfv3NbrLsRetransQLen OBJECT-TYPE
+            SYNTAX          Gauge32
+            MAX-ACCESS      read-only
+            STATUS          current
+            DESCRIPTION
+                "The current length of the retransmission
+                queue."
+            ::= { ospfv3NbrEntry 11 }
+
+    ospfv3NbrHelloSuppressed OBJECT-TYPE
+            SYNTAX          TruthValue
+            MAX-ACCESS      read-only
+            STATUS          current
+            DESCRIPTION
+                "Indicates whether Hellos are being suppressed
+                to the neighbor."
+            ::= { ospfv3NbrEntry 12 }
+
+    ospfv3NbrIfId OBJECT-TYPE
+            SYNTAX          InterfaceIndex
+            MAX-ACCESS      read-only
+            STATUS          current
+            DESCRIPTION
+                "The Interface ID that the neighbor advertises
+                in its Hello packets on this link, that is, the
+                neighbor's local interface index."
+            ::= { ospfv3NbrEntry 13 }
+
+    ospfv3NbrRestartHelperStatus OBJECT-TYPE
+           SYNTAX       INTEGER { notHelping(1),
+                                  helping(2)
+                                }
+           MAX-ACCESS   read-only
+           STATUS       current
+           DESCRIPTION
+              "Indicates whether the router is acting
+              as a graceful restart helper for the neighbor."
+              ::= { ospfv3NbrEntry 14 }
+
+    ospfv3NbrRestartHelperAge OBJECT-TYPE
+           SYNTAX       Ospfv3UpToRefreshIntervalTC
+           UNITS        "seconds"
+           MAX-ACCESS   read-only
+           STATUS       current
+           DESCRIPTION
+              "Remaining time in current OSPF graceful restart
+              interval, if the router is acting as a restart
+              helper for the neighbor."
+           ::= { ospfv3NbrEntry 15 }
+
+    ospfv3NbrRestartHelperExitReason OBJECT-TYPE
+           SYNTAX       INTEGER { none(1),
+                                  inProgress(2),
+                                  completed(3),
+                                  timedOut(4),
+                                  topologyChanged(5)
+                                }
+           MAX-ACCESS   read-only
+           STATUS       current
+           DESCRIPTION
+              "Describes the outcome of the last attempt at acting
+              as a graceful restart helper for the neighbor.
+              none:            no restart has yet been attempted.
+              inProgress:      a restart attempt is currently underway.
+              completed:       the last restart completed successfully.
+              timedOut:        the last restart timed out.
+              topologyChanged: the last restart was aborted due to
+                               a topology change."
+        ::= { ospfv3NbrEntry 16 }
+	
+    -- OSPFv3 Virtual Neighbor Table
+
+    ospfv3VirtNbrTable OBJECT-TYPE
+            SYNTAX          SEQUENCE OF Ospfv3VirtNbrEntry
+            MAX-ACCESS      not-accessible
+            STATUS          current
+            DESCRIPTION
+                "A table describing all virtual neighbors."
+            REFERENCE
+                "OSPF Version 2, Section 15, Virtual Links"
+            ::= { nptospfv3Objects 2 }
+
+    ospfv3VirtNbrEntry OBJECT-TYPE
+            SYNTAX          Ospfv3VirtNbrEntry
+            MAX-ACCESS      not-accessible
+            STATUS          current
+            DESCRIPTION
+                "Virtual neighbor information."
+            INDEX           { ospfv3VirtNbrArea,
+                              ospfv3VirtNbrRtrId,
+                              ospfv3VirtNbrInstanceIndex}
+            ::= { ospfv3VirtNbrTable 1 }
+
+    Ospfv3VirtNbrEntry ::= SEQUENCE {
+            ospfv3VirtNbrArea
+                    Ospfv3AreaIdTC,
+            ospfv3VirtNbrRtrId
+                    Ospfv3RouterIdTC,
+            ospfv3VirtNbrInstanceIndex
+                    Counter32,
+            ospfv3VirtNbrIfIndex
+                    InterfaceIndex,
+            ospfv3VirtNbrIfInstId
+                    Ospfv3IfInstIdTC,
+            ospfv3VirtNbrAddressType
+                    InetAddressType,
+            ospfv3VirtNbrAddress
+                    InetAddress,
+            ospfv3VirtNbrOptions
+                    Integer32,
+            ospfv3VirtNbrState
+                    INTEGER,
+            ospfv3VirtNbrEvents
+                    Counter32,
+            ospfv3VirtNbrLsRetransQLen
+                    Gauge32,
+            ospfv3VirtNbrHelloSuppressed
+                    TruthValue,
+            ospfv3VirtNbrIfId
+                    InterfaceIndex,
+            ospfv3VirtNbrRestartHelperStatus
+                    INTEGER,
+            ospfv3VirtNbrRestartHelperAge
+                    Ospfv3UpToRefreshIntervalTC,
+            ospfv3VirtNbrRestartHelperExitReason
+                    INTEGER
+            }
+
+    ospfv3VirtNbrArea OBJECT-TYPE
+            SYNTAX          Ospfv3AreaIdTC
+            MAX-ACCESS      read-only
+            STATUS          current
+            DESCRIPTION
+                "The transit area Identifier."
+            ::= { ospfv3VirtNbrEntry 1 }
+
+    ospfv3VirtNbrRtrId OBJECT-TYPE
+            SYNTAX          Ospfv3RouterIdTC
+            MAX-ACCESS      read-only
+            STATUS          current
+            DESCRIPTION
+                "A 32-bit integer uniquely identifying the
+                neighboring router in the Autonomous System."
+            ::= { ospfv3VirtNbrEntry 2 }
+
+    ospfv3VirtNbrInstanceIndex OBJECT-TYPE
+            SYNTAX          Counter32
+            MAX-ACCESS      read-only
+            STATUS          current
+            DESCRIPTION
+                "oid transform from instance name."
+            ::= { ospfv3VirtNbrEntry 3 }
+
+    ospfv3VirtNbrIfIndex OBJECT-TYPE
+            SYNTAX          InterfaceIndex
+            MAX-ACCESS      read-only
+            STATUS          current
+            DESCRIPTION
+                "The local Interface ID for the virtual link over
+                which the neighbor can be reached."
+            ::= { ospfv3VirtNbrEntry 4 }
+
+    ospfv3VirtNbrIfInstId OBJECT-TYPE
+            SYNTAX          Ospfv3IfInstIdTC
+            MAX-ACCESS      read-only
+            STATUS          current
+            DESCRIPTION
+                "The interface instance for the virtual link over
+                which the neighbor can be reached."
+            ::= { ospfv3VirtNbrEntry 5 }
+
+    ospfv3VirtNbrAddressType OBJECT-TYPE
+            SYNTAX          InetAddressType
+            MAX-ACCESS      read-only
+            STATUS          current
+            DESCRIPTION
+                "The address type of ospfv3VirtNbrAddress.  Only IPv6
+                addresses without zone index are expected."
+            ::= { ospfv3VirtNbrEntry 6 }
+
+    ospfv3VirtNbrAddress OBJECT-TYPE
+            SYNTAX          InetAddress
+            MAX-ACCESS      read-only
+            STATUS          current
+            DESCRIPTION
+                "The IPv6 address advertised by this virtual neighbor.
+                It must be a global scope address."
+            ::= { ospfv3VirtNbrEntry 7 }
+
+    ospfv3VirtNbrOptions OBJECT-TYPE
+            SYNTAX          Integer32
+            MAX-ACCESS      read-only
+            STATUS          current
+            DESCRIPTION
+                "A bit mask corresponding to the neighbor's options
+                field."
+            REFERENCE
+                "OSPF for IPv6, Appendix A.2, The Options Field"
+            ::= { ospfv3VirtNbrEntry 8 }
+
+    ospfv3VirtNbrState OBJECT-TYPE
+            SYNTAX          INTEGER {
+                            down(1),
+                            attempt(2),
+                            init(3),
+                            twoWay(4),
+                            exchangeStart(5),
+                            exchange(6),
+                            loading(7),
+                            full(8)
+                            }
+            MAX-ACCESS      read-only
+            STATUS          current
+            DESCRIPTION
+                "The state of the virtual neighbor relationship."
+            ::= { ospfv3VirtNbrEntry 9 }
+
+    ospfv3VirtNbrEvents OBJECT-TYPE
+            SYNTAX          Counter32
+            MAX-ACCESS      read-only
+            STATUS          current
+            DESCRIPTION
+                "The number of times this virtual link has
+                changed its state or an error has occurred.
+
+                Discontinuities in the value of this counter
+                can occur at re-initialization of the management
+                system and at other times as indicated by the
+                value of ospfv3DiscontinuityTime."
+            ::= { ospfv3VirtNbrEntry 10 }
+
+    ospfv3VirtNbrLsRetransQLen OBJECT-TYPE
+            SYNTAX          Gauge32
+            MAX-ACCESS      read-only
+            STATUS          current
+            DESCRIPTION
+                "The current length of the retransmission
+                queue."
+            ::= { ospfv3VirtNbrEntry 11 }
+
+    ospfv3VirtNbrHelloSuppressed OBJECT-TYPE
+            SYNTAX          TruthValue
+            MAX-ACCESS      read-only
+            STATUS          current
+            DESCRIPTION
+                "Indicates whether Hellos are being suppressed
+                to the neighbor."
+            ::= { ospfv3VirtNbrEntry 12 }
+
+    ospfv3VirtNbrIfId OBJECT-TYPE
+            SYNTAX          InterfaceIndex
+            MAX-ACCESS      read-only
+            STATUS          current
+            DESCRIPTION
+                "The Interface ID that the neighbor advertises
+                in its Hello packets on this virtual link, that is,
+                the neighbor's local Interface ID."
+            ::= { ospfv3VirtNbrEntry 13 }
+
+   ospfv3VirtNbrRestartHelperStatus OBJECT-TYPE
+           SYNTAX       INTEGER { notHelping(1),
+                                  helping(2)
+                                }
+           MAX-ACCESS   read-only
+           STATUS       current
+           DESCRIPTION
+               "Indicates whether the router is acting
+               as a graceful restart helper for the neighbor."
+              ::= { ospfv3VirtNbrEntry 14 }
+
+    ospfv3VirtNbrRestartHelperAge OBJECT-TYPE
+           SYNTAX       Ospfv3UpToRefreshIntervalTC
+           UNITS        "seconds"
+           MAX-ACCESS   read-only
+           STATUS       current
+           DESCRIPTION
+               "Remaining time in the current OSPF graceful restart
+               interval, if the router is acting as a restart
+               helper for the neighbor."
+           ::= { ospfv3VirtNbrEntry 15 }
+
+    ospfv3VirtNbrRestartHelperExitReason OBJECT-TYPE
+           SYNTAX       INTEGER { none(1),
+                                  inProgress(2),
+                                  completed(3),
+                                  timedOut(4),
+                                  topologyChanged(5)
+                                }
+           MAX-ACCESS   read-only
+           STATUS       current
+           DESCRIPTION
+               "Describes the outcome of the last attempt at acting
+               as a graceful restart helper for the neighbor.
+               none:            no restart has yet been attempted.
+               inProgress:      a restart attempt is currently underway.
+               completed:       the last restart completed successfully.
+               timedOut:        the last restart timed out.
+               topologyChanged: the last restart was aborted due to
+                                a topology change."
+        ::= { ospfv3VirtNbrEntry 16 }	
+	
+END

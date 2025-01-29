@@ -1,0 +1,67 @@
+
+-- File Name : NPT-EQUIPMENT_MIB
+-- Date      : Wed Mar 14 09:57:12 CST 2012
+-- Author    : AdventNet Agent Toolkit C Edition - MibEditor 6
+
+
+
+NPT-EQUIPMENT-MIB	DEFINITIONS ::= BEGIN
+	IMPORTS
+		TimeStamp, DisplayString
+			FROM SNMPv2-TC
+		eciNpti
+			FROM NPT-ROOT-MIB
+		MODULE-IDENTITY, OBJECT-IDENTITY, OBJECT-TYPE, Unsigned32, Integer32, NOTIFICATION-TYPE, enterprises
+			FROM SNMPv2-SMI;
+
+	equipmentMIB	MODULE-IDENTITY
+		LAST-UPDATED	"200612082008Z"
+		ORGANIZATION	"Ribbon Communications Inc."
+		CONTACT-INFO	"on.support@rbbn.com 
+                         Ribbon Communications Inc.,China
+                         Dongxin Tower, No.398 Wensan Road, 
+                         Hangzhou, 310012 P.R.China"
+		DESCRIPTION		"The MIB module for Npt performance monitoring."
+		REVISION		"200612082008Z"
+		DESCRIPTION		""
+		::=  {  eciNpti 1  }
+
+
+
+		
+	npt1800	OBJECT-IDENTITY
+		STATUS			current
+		DESCRIPTION		"This node contains the configurations for the npt1800."
+		::=  {  equipmentMIB  12  }	
+		
+	npt1200i OBJECT-IDENTITY
+		STATUS			current
+		DESCRIPTION		"This node contains the configurations for the npt1200i."
+		::=  {  equipmentMIB  13  }	
+		
+	npt1050i OBJECT-IDENTITY
+		STATUS			current
+		DESCRIPTION		"This node contains the configurations for the npt1050i."
+		::=  {  equipmentMIB  14  }	
+		
+	npt1300 OBJECT-IDENTITY
+		STATUS			current
+		DESCRIPTION		"This node contains the configurations for the npt1300."
+		::=  {  equipmentMIB  15  }	
+		
+	npt1022 OBJECT-IDENTITY
+		STATUS			current
+		DESCRIPTION		"This node contains the configurations for the npt1022."
+		::=  {  equipmentMIB  16  }	
+		
+	npt1250 OBJECT-IDENTITY
+		STATUS			current
+		DESCRIPTION		"This node contains the configurations for the npt1250."
+		::=  {  equipmentMIB  17  }	
+		
+	npt1100 OBJECT-IDENTITY
+		STATUS			current
+		DESCRIPTION		"This node contains the configurations for the npt1100."
+		::=  {  equipmentMIB  18  }	
+
+END

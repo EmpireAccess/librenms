@@ -1,0 +1,128 @@
+-- the NPT IP address table
+  
+ -- The NPT IP address table contains this NPT's IP addressing
+ -- information.
+ 
+NPT-IP-MIB	DEFINITIONS ::= BEGIN
+	IMPORTS
+	nptIP
+		     FROM NPT-ROOT-MIB
+        MODULE-IDENTITY, OBJECT-TYPE, Counter32, Gauge32,
+        Integer32, Unsigned32, IpAddress, mib-2
+                     FROM SNMPv2-SMI
+		DisplayString
+			FROM RFC1213-MIB;
+
+    nptip MODULE-IDENTITY
+        LAST-UPDATED "202012020000Z"
+        ORGANIZATION "ECI"
+        CONTACT-INFO "Contact-info"
+        DESCRIPTION  "Description"
+		REVISION	 "01Z"
+		DESCRIPTION	 ""
+		::=  {  nptIP  1  }
+
+    -- Objects
+    nptIPObjects OBJECT IDENTIFIER ::= { nptip 1 }
+    
+ nptIpAddrTable OBJECT-TYPE
+     SYNTAX  SEQUENCE OF NptIpAddrEntry
+     ACCESS  not-accessible
+     STATUS  mandatory
+     DESCRIPTION
+             "The table of addressing information relevant to
+             this entity's IP addresses."
+     ::= { nptIPObjects 1 }
+  
+ nptIpAddrEntry OBJECT-TYPE
+     SYNTAX  NptIpAddrEntry
+     ACCESS  not-accessible
+     STATUS  mandatory
+     DESCRIPTION
+             "The addressing information for one of this
+             entity's IP addresses."
+     INDEX   {  nptIpAdEntAddr  }
+     ::= { nptIpAddrTable 1 }
+  
+ NptIpAddrEntry ::=
+     SEQUENCE {
+          nptIpAdEntAddr 
+             IpAddress,
+          nptIpAdEntIfIndex
+             INTEGER,
+         nptIpAdEntNetMask
+             IpAddress,
+         nptIpAdEntBcastAddr
+             INTEGER,
+         nptIpAdEntReasmMaxSize
+             INTEGER (0..65535)
+     }
+  
+  nptIpAdEntAddr  OBJECT-TYPE
+     SYNTAX  IpAddress
+     ACCESS  read-only
+     STATUS  mandatory
+     DESCRIPTION
+             "The IP address to which this entry's addressing
+             information pertains."
+     ::= { nptIpAddrEntry 1 }
+  
+  nptIpAdEntIfIndex OBJECT-TYPE
+     SYNTAX  INTEGER
+     ACCESS  read-only
+     STATUS  mandatory
+     DESCRIPTION
+             "The index value which uniquely identifies the
+             interface to which this entry is applicable.  The
+             interface identified by a particular value of this
+             index is the same interface as identified by the
+             same value of ifIndex."
+     ::= { nptIpAddrEntry 2 }
+  
+ nptIpAdEntNetMask OBJECT-TYPE
+     SYNTAX  IpAddress
+     ACCESS  read-only
+     STATUS  mandatory
+     DESCRIPTION
+             "The subnet mask associated with the IP address of
+             this entry.  The value of the mask is an IP
+             address with all the network bits set to 1 and all
+             the hosts bits set to 0."
+     ::= { nptIpAddrEntry 3 }
+  
+ nptIpAdEntBcastAddr OBJECT-TYPE
+     SYNTAX  INTEGER
+     ACCESS  read-only
+     STATUS  mandatory
+     DESCRIPTION
+             "The value of the least-significant bit in the IP
+             broadcast address used for sending datagrams on
+             the (logical) interface associated with the IP
+             address of this entry.  For example, when the
+             Internet standard all-ones broadcast address is
+             used, the value will be 1.  This value applies to
+             both the subnet and network broadcasts addresses
+             used by the entity on this (logical) interface."
+     ::= { nptIpAddrEntry 4 }
+  
+ nptIpAdEntReasmMaxSize OBJECT-TYPE
+     SYNTAX  INTEGER (0..65535)
+     ACCESS  read-only
+     STATUS  mandatory
+     DESCRIPTION
+             "The size of the largest IP datagram which this
+             entity can re-assemble from incoming IP fragmented
+             datagrams received on this interface."
+     ::= { nptIpAddrEntry 5 } 
+ 
+nptIpAdEntSubNet OBJECT-TYPE
+     SYNTAX  DisplayString (SIZE (0..24))
+     ACCESS  read-only
+     STATUS  mandatory
+     DESCRIPTION
+             "The subnet address associated with the IP address of
+             this entry, with the format <ip>/<mask length>. For
+             example, 1.2.3.0/24. "
+     ::= { nptIpAddrEntry 6 }
+     
+END
