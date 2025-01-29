@@ -1,0 +1,405 @@
+OAD-AMS-ALARM-MIB DEFINITIONS ::= BEGIN 
+
+IMPORTS
+   DisplayString,TruthValue
+       FROM SNMPv2-TC 
+   NOTIFICATION-TYPE, Integer32, enterprises, MODULE-IDENTITY, snmpModules 
+       FROM SNMPv2-SMI
+   OBJECT-TYPE 
+       FROM RFC-1212;
+
+oadAmsAlarmMib MODULE-IDENTITY
+    LAST-UPDATED "201111160000Z"          -- 16 Nov 2011, midnight
+    ORGANIZATION "Alcatel-Lucent"
+    CONTACT-INFO "Alcatel-Lucent 5529 OAD product support
+                 "
+
+        DESCRIPTION
+            "This MIB module defines objects to support OAD SNMP trap forwarding."
+        REVISION "201111160000Z" -- 16 Nov 2011
+        DESCRIPTION "This version published as OAD release 9.1.10"
+        REVISION "201103020000Z" -- 2 Mar 2011
+        DESCRIPTION "This version published as OAD release 9.1."
+        REVISION "199905130000Z" -- 13 May 1999
+        DESCRIPTION "The Initial Revision"
+    ::= { snmpModules 18 }
+
+alcatel OBJECT IDENTIFIER ::= { enterprises 637 } 
+
+cid OBJECT IDENTIFIER ::= { alcatel 69 } 
+
+amsAlarmTrapMIB OBJECT IDENTIFIER ::= {cid 6} 
+
+amsAlarmTrapMIBObjects OBJECT IDENTIFIER ::= { amsAlarmTrapMIB 1}
+
+AlarmCategoryType ::= INTEGER { communications(1), 
+                                qualityofService(2),
+                                processingError(3), 
+                                equipment(4), 
+                                environmental(5),
+                                integrityViolation(6),
+                                operationViolation(7),
+                                physicalViolation(8),
+                                timeDomainViolation(9),
+                                securityOrMechanismViolation(10)
+                              } 
+
+AlarmSeverityType ::= INTEGER { indeterminate(1), 
+								warning(2), 
+								minor(3), 
+								major(4), 
+								critical(5), 
+								cleared(6)
+							  } 
+
+AlarmServiceAffectingType ::= INTEGER { serviceAffecting(1), 
+                                        notServiceAffecting(2),
+                                        unknown(3)
+                                      } 
+
+amsAlarmTable  OBJECT-TYPE 
+    SYNTAX  SEQUENCE OF AmsAlarmEntry
+    MAX-ACCESS not-accessible 
+    STATUS current 
+    DESCRIPTION "This table defines all the possible alarms at the agent.
+                 For each alarm, there is an entry.
+                 Each entry consists of an index for the table.  "
+    ::= { amsAlarmTrapMIBObjects 1} 
+
+amsAlarmEntry OBJECT-TYPE
+   SYNTAX AmsAlarmEntry
+   MAX-ACCESS not-accessible
+   STATUS current
+   DESCRIPTION "Entry for alarm table."
+   INDEX { notificationId }
+   
+   ::= {amsAlarmTable 1} 
+
+AmsAlarmEntry ::= SEQUENCE {
+   clearedTimeStamp DisplayString,
+   filterThreshold INTEGER,
+   lastModificationTimeStamp DisplayString,
+   neAlarmType DisplayString,
+   uniqueKey DisplayString,
+   specificProblem DisplayString,
+   lastAcknowledgedTimeStamp DisplayString,
+   userId DisplayString,
+   reserved4 OCTET STRING,
+   repairActions OCTET STRING,
+   reserved2 OCTET STRING,
+   reserved3 OCTET STRING,
+   lastAcknowledgedUserId DisplayString,
+   emsDomain OCTET STRING,
+   lastAcknowledgedInetAddress DisplayString,
+   objectObjectId DisplayString,
+   additionalInfo OCTET STRING,
+   sourceFriendlyName DisplayString,
+   aliasName DisplayString,
+   alarmSeverity AlarmSeverityType,
+   notificationId DisplayString,
+   alarmCategory AlarmCategoryType,
+   asamAlarmServAffType AlarmServiceAffectingType,
+   filterId INTEGER,
+   alarmDomain DisplayString,
+   raisedTimeStamp DisplayString,
+   acknowledged TruthValue,
+   probableCause DisplayString,
+   neIpAddress DisplayString,
+   lastChangedUserIdInetAddress DisplayString,
+   filterWindow INTEGER,
+   notes DisplayString,
+   filterType OCTET STRING,
+   objectType DisplayString
+   } 
+
+notificationId OBJECT-TYPE 
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "This is the notification id for an alarm. " 
+    
+    ::= {amsAlarmEntry 1} 
+
+alarmCategory OBJECT-TYPE 
+    SYNTAX AlarmCategoryType
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "This object defines the category of an alarm. Alarm 
+                 categories are defined in X.733 and X.736. " 
+    ::= {amsAlarmEntry 2} 
+
+alarmSeverity OBJECT-TYPE 
+    SYNTAX AlarmSeverityType
+    MAX-ACCESS read-only 
+    STATUS current
+    DESCRIPTION "This object is defined to assign a severity level to an alarm.
+                 This object may be indeterminate, warning, minor, major and
+                 critical. " 
+    ::= {amsAlarmEntry 3} 
+
+objectObjectId OBJECT-TYPE 
+    SYNTAX DisplayString 
+    MAX-ACCESS read-only 
+    STATUS obsolete 
+    DESCRIPTION "This object defines the AMS alarm's objectId." 
+    ::= {amsAlarmEntry 4} 
+
+raisedTimeStamp OBJECT-TYPE 
+    SYNTAX DisplayString 
+    MAX-ACCESS read-only
+    STATUS current 
+    DESCRIPTION "This object defines the time at which the alarm is raised." 
+    ::= {amsAlarmEntry 5} 
+
+clearedTimeStamp OBJECT-TYPE 
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "This object defines the time at which the alarm is cleared." 
+    ::= {amsAlarmEntry 6} 
+
+lastModificationTimeStamp OBJECT-TYPE 
+    SYNTAX DisplayString 
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION "This object defines the time at which the alarm was last modified." 
+    ::= {amsAlarmEntry 7} 
+
+additionalInfo OBJECT-TYPE 
+    SYNTAX OCTET STRING 
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION "This object defines additional information on the alarm." 
+    ::= {amsAlarmEntry 8} 
+
+sourceFriendlyName OBJECT-TYPE
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS current
+    DESCRIPTION "This object defines the friendly name of the resource on 
+                 which the alarm was raised." 
+    ::= {amsAlarmEntry 9} 
+
+acknowledged OBJECT-TYPE 
+    SYNTAX TruthValue
+    MAX-ACCESS read-only 
+    STATUS current
+    DESCRIPTION "This object defines whether an alarm has been acknowledged or not." 
+    ::= {amsAlarmEntry 10} 
+
+probableCause OBJECT-TYPE 
+    SYNTAX DisplayString 
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION "This object defines the probable cause of the alarm." 
+    ::= {amsAlarmEntry 11} 
+
+alarmDomain OBJECT-TYPE 
+    SYNTAX DisplayString 
+    MAX-ACCESS read-only 
+    STATUS current
+    DESCRIPTION "This object defines the domain of an alarm." 
+    ::= {amsAlarmEntry 12} 
+
+notes OBJECT-TYPE 
+    SYNTAX DisplayString 
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION "This object defines a note of an alarm." 
+    ::= {amsAlarmEntry 13} 
+
+asamAlarmServAffType OBJECT-TYPE 
+    SYNTAX AlarmServiceAffectingType 
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION "This object defines whether an alarm is service affecting or not." 
+    ::= {amsAlarmEntry 14} 
+
+specificProblem OBJECT-TYPE 
+    SYNTAX DisplayString 
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION "This object defines the specific problem of an alarm." 
+    ::= {amsAlarmEntry 15} 
+
+repairActions OBJECT-TYPE 
+    SYNTAX OCTET STRING 
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION "This object defines the repair actions on an alarm." 
+    ::= {amsAlarmEntry 16} 
+
+objectType OBJECT-TYPE 
+    SYNTAX DisplayString
+    MAX-ACCESS read-only
+    STATUS obsolete
+    DESCRIPTION "This object defines the object type of the resource on 
+                 which an alarm is raised." 
+    ::= {amsAlarmEntry 17} 
+
+filterId OBJECT-TYPE 
+    SYNTAX Integer32 
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION "This object defines the filter Id of an alarm." 
+    ::= {amsAlarmEntry 18} 
+
+filterThreshold OBJECT-TYPE 
+    SYNTAX Integer32
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION "This object defines the filter threshold of an alarm." 
+    ::= {amsAlarmEntry 19} 
+
+filterType OBJECT-TYPE 
+    SYNTAX OCTET STRING 
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION "This object defines the filter type of an alarm." 
+    ::= {amsAlarmEntry 20} 
+
+filterWindow OBJECT-TYPE 
+    SYNTAX Integer32 
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION "This object defines the filter window of an alarm." 
+    ::= {amsAlarmEntry 21} 
+
+userId OBJECT-TYPE 
+    SYNTAX DisplayString 
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION "This object defines the user id of an alarm." 
+    ::= {amsAlarmEntry 22} 
+
+emsDomain OBJECT-TYPE 
+    SYNTAX OCTET STRING 
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION "This object defines the emsDomain of an alarm." 
+    ::= {amsAlarmEntry 23} 
+    
+lastAcknowledgedTimeStamp OBJECT-TYPE 
+    SYNTAX DisplayString 
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION "This object defines the last acknowledged TimeStamp  of an alarm." 
+    ::= {amsAlarmEntry 24} 
+    
+lastAcknowledgedUserId OBJECT-TYPE 
+    SYNTAX DisplayString 
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION "This object defines the last acknowledged user id  of an alarm." 
+    ::= {amsAlarmEntry 25} 
+
+neAlarmType OBJECT-TYPE 
+    SYNTAX DisplayString 
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION "This object defines the network element alarm type for an alarm." 
+    ::= {amsAlarmEntry 26}
+    
+lastAcknowledgedInetAddress OBJECT-TYPE 
+    SYNTAX DisplayString 
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION "This object defines the last acknowledged via IP address of an alarm." 
+    ::= {amsAlarmEntry 27} 
+    
+lastChangedUserIdInetAddress OBJECT-TYPE 
+    SYNTAX DisplayString 
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION "This object defines the last assigned via IP address of an alarm." 
+    ::= {amsAlarmEntry 28} 
+    
+aliasName OBJECT-TYPE 
+    SYNTAX DisplayString 
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION "This object defines the alias name of the NE for an alarm." 
+    ::= {amsAlarmEntry 29} 
+
+neIpAddress OBJECT-TYPE 
+    SYNTAX DisplayString 
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION "This object defines the IP address of the NE for an alarm." 
+    ::= {amsAlarmEntry 30}     
+
+uniqueKey OBJECT-TYPE 
+    SYNTAX DisplayString 
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION "This object defines the uniqueKey of the NE for an alarm." 
+    ::= {amsAlarmEntry 31}
+reserved2 OBJECT-TYPE 
+    SYNTAX OCTET STRING 
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION "This object defines the reserved2 of an alarm." 
+    ::= {amsAlarmEntry 32} 
+
+reserved3 OBJECT-TYPE 
+    SYNTAX OCTET STRING 
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION "This object defines the reserved3 of an alarm." 
+    ::= {amsAlarmEntry 33} 
+    
+reserved4 OBJECT-TYPE 
+    SYNTAX OCTET STRING 
+    MAX-ACCESS read-only 
+    STATUS current 
+    DESCRIPTION "This object defines the reserved4 of an alarm." 
+    ::= {amsAlarmEntry 34} 
+                     
+amsAlarmMIBNotificationPrefix    OBJECT IDENTIFIER
+								 ::= { amsAlarmTrapMIB 2 }
+								 
+amsAlarmMIBNotifications         OBJECT IDENTIFIER
+								 ::= { amsAlarmMIBNotificationPrefix 0 }
+
+amsAlarm NOTIFICATION-TYPE 
+    OBJECTS { clearedTimeStamp,
+              filterThreshold,
+              lastModificationTimeStamp,
+              neAlarmType,
+              uniqueKey,
+              specificProblem,
+              lastAcknowledgedTimeStamp,
+              userId,
+              reserved4,
+              repairActions,
+              reserved2,
+              reserved3,
+              lastAcknowledgedUserId,
+              emsDomain,
+              lastAcknowledgedInetAddress,
+              objectObjectId,
+              additionalInfo,
+              sourceFriendlyName,
+              aliasName,
+              alarmSeverity,
+              notificationId,
+              alarmCategory,
+              asamAlarmServAffType,
+              filterId,
+              alarmDomain,
+              raisedTimeStamp,
+              acknowledged,
+              probableCause,
+              neIpAddress,
+              lastChangedUserIdInetAddress,
+              filterWindow,
+              notes,
+              filterType,
+              objectType
+            }
+    STATUS current
+    
+    DESCRIPTION "The Alarm Notification Trap "
+    ::= { amsAlarmMIBNotifications 1 }
+    
+END
