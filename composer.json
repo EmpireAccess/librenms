@@ -55,6 +55,7 @@
         "predis/predis": "^2.0",
         "silber/bouncer": "^1.0",
         "socialiteproviders/manager": "^4.3",
+        "socialiteproviders/microsoft": "^4.6",
         "spatie/laravel-ignition": "^2.0",
         "symfony/yaml": "^6.2",
         "tecnickcom/tcpdf": "^6.4",
