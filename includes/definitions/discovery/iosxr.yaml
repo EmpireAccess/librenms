@@ -22,3 +22,12 @@ modules:
                           oid: cHsrpGrpVirtualIpAddr
                           op: '='
                           value: '0.0.0.0'
+        temperature:
+            options:
+                skip_values:
+                    -
+                        op: '='
+                        value: -3276.8
+                    -
+                        op: '='
+                        value: -32768
