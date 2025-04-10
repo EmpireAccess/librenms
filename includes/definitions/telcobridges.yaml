@@ -1,0 +1,7 @@
+os: telcobridges
+text: 'telcobridges'
+type: firewall
+icon: telcobridges
+discovery:
+    - sysObjectID:
+        - .1.3.6.1.4.1.21776.1

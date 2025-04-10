@@ -1,0 +1,5682 @@
+TB-MIB DEFINITIONS ::= BEGIN
+
+    IMPORTS
+         MODULE-IDENTITY, OBJECT-TYPE,
+         enterprises, Integer32, Unsigned32, Gauge32, NOTIFICATION-TYPE     FROM SNMPv2-SMI
+         OBJECT-GROUP, MODULE-COMPLIANCE, NOTIFICATION-GROUP                FROM SNMPv2-CONF
+         DisplayString                                                      FROM SNMPv2-TC;
+
+    tb MODULE-IDENTITY
+        LAST-UPDATED "201810291430Z" -- 2018 October 29, 14:30
+        ORGANIZATION "TelcoBridges Inc."
+        CONTACT-INFO "support@telcobridges.com"
+        DESCRIPTION
+            "The MIB module to describe TelcoBridges private MIB."
+        REVISION    "201810291430Z"
+        DESCRIPTION
+            "Added firewall status to host MIB: tbHostFirewall"
+        REVISION    "201808011717Z"
+        DESCRIPTION
+            "Added tbHostToolpackVersion, tbHostActiveConfiguration and tbHostComponentCurrentlyUpdating"
+        REVISION    "201808010942Z"
+        DESCRIPTION
+            "Added tbNapAvailabilityDetectionPollRemoteProxy and tbNapAvailabilityDetectionAvailable.
+             Added tbNapRegistrationRegisterToProxy and tbNapRegistrationRegistered.
+             Added tbHostFeature"        
+        REVISION    "201512101622Z"
+        DESCRIPTION
+            "Change type of tbMtp2TimeslotMask from Integer32 to Gauge32."             
+        REVISION    "201510231125Z"
+        DESCRIPTION
+            "Fixed typo in the object type tbHaAppCurrentState for the identifier of the value 104."
+        REVISION    "201508241532Z"
+        DESCRIPTION
+            "Changed TRAPs names: tbSIPCurrentState by tbSipState and tbH248MGCCurrentState by tbH248MgcState."
+        REVISION    "201508041355Z"
+        DESCRIPTION
+            "Added tbHost and Traps regarding hosts."
+        REVISION    "201411250855Z"
+        DESCRIPTION
+            "Added TRAPs: tbNapAvailability, tbPwrSupplyState, tbNp1State, tbAppState, tbAppHaState, tbClkGradeState,
+             tbClkActiveState, tbIsdnDChannelState, tbCASPhysicalLineState, tbSIPCurrentState and tbH248MGCCurrentState."
+        REVISION    "201409051534Z"
+        DESCRIPTION
+            "Added tbIsdn, tbCas, tbSip, tbH248 and tbLineServicesUsage."
+        REVISION    "201404171014Z"
+        DESCRIPTION
+            "Added tbCalls, tbNAP, tbHwPowerSupplyTable, tbHwFanTable, tbHaNp1, tbHaApp and tbClock."
+        REVISION    "201201161155Z"
+        DESCRIPTION
+            "Added TMedia product MIBs subcategory."
+        REVISION    "201106171430Z"
+        DESCRIPTION
+            "Added IUA LAPD table."
+        REVISION    "201106160930Z"
+        DESCRIPTION
+            "Fixed text formatting and alignment. Modified MIB to be fully compliant with the SMIv2 standard."
+        REVISION    "201106151250Z"
+        DESCRIPTION
+            "Modified IUA tables, replaced INTEGER data types with Integer32"
+        REVISION     "201106100000Z"
+        DESCRIPTION
+            "Added CPU and memory usage table to TelcoBridges private MIB"
+        REVISION     "201105200000Z"
+        DESCRIPTION
+            "Added MTP2, M2PA, M2UA, M3UA and IUA tables"
+        REVISION     "201105030000Z"
+        DESCRIPTION
+            "Moved hardware identification fields into a table"
+        REVISION     "200710030000Z"
+        DESCRIPTION
+             "Fixed MIB to compile correctly."
+        REVISION     "200507070000Z"
+        DESCRIPTION
+             "The initial version of this MIB module."
+        ::= {  enterprises 21776 }
+
+    -- TMedia product MIBs
+    tbTMedia                   OBJECT IDENTIFIER   ::= { tb 1 }
+
+    -- The objects in the TB MIB are arranged in the following groups         --
+    --   Directory        : Supported modules table                           --
+    --   Common           : Hardware and software tables supported by all TMedia products --
+    --   Signaling        : Signaling layers tables                           --
+    --   Calls            : Calls statistics of the system                    --
+    --   NAP              : Network Access Point states/statistics table      --
+    --   HighAvailability : High availability state tables                    --
+    --   Clock            : Clocking states table                             --
+    --   LineServicesUsage: Line services usage states/statistics table       --
+    --   Host             : Host states table                                 --
+    --   HostFeature      : List of available host features                   --
+    --   HostFirewall     : Firewall (SBC) status and statistics              --
+    --   Conformance      : Conformance standards for this MIB                --
+    tbDirectory                OBJECT IDENTIFIER   ::= { tbTMedia 1 }
+    tbCommon                   OBJECT IDENTIFIER   ::= { tbTMedia 2 }
+    tbSignaling                OBJECT IDENTIFIER   ::= { tbTMedia 3 }
+    tbCalls                    OBJECT IDENTIFIER   ::= { tbTMedia 4 }
+    tbNAP                      OBJECT IDENTIFIER   ::= { tbTMedia 5 }
+    tbHighAvailability         OBJECT IDENTIFIER   ::= { tbTMedia 6 }
+    tbClock                    OBJECT IDENTIFIER   ::= { tbTMedia 7 }
+    tbLineServicesUsage        OBJECT IDENTIFIER   ::= { tbTMedia 8 }
+    tbHost                     OBJECT IDENTIFIER   ::= { tbTMedia 9 }
+    tbHostFeature              OBJECT IDENTIFIER   ::= { tbTMedia 10 }
+    tbHostFirewall             OBJECT IDENTIFIER   ::= { tbTMedia 11 }
+    tbConformance              OBJECT IDENTIFIER   ::= { tbTMedia 12 }
+
+
+    -- ==================================== --
+    -- tb.tbMedia.tbDirectory.tbModuleTable --
+    -- ==================================== --
+    -- Module Table group --
+    tbModuleTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF TBModuleEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+               "Lists the supported modules."
+        ::= { tbDirectory 1 }
+
+    tbModuleEntry OBJECT-TYPE
+        SYNTAX  TBModuleEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+               "An entry in the module table."
+        INDEX   { tbModuleIndex }
+        ::= { tbModuleTable 1 }
+
+    TBModuleEntry ::=
+        SEQUENCE {
+            tbModuleIndex         Integer32,
+            tbModuleID            OBJECT IDENTIFIER,
+            tbModuleDescription   DisplayString
+    }
+
+    tbModuleIndex OBJECT-TYPE
+        SYNTAX  Integer32 (0..2147483647)
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "The index which uniquely identifies the module in the module table."
+        ::= { tbModuleEntry 1 }
+
+    tbModuleID OBJECT-TYPE
+        SYNTAX  OBJECT IDENTIFIER
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+               "The module object identifier."
+        ::= { tbModuleEntry 2 }
+
+    tbModuleDescription OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "A brief description of the module."
+        ::= { tbModuleEntry 3 }
+
+    -- =================================== --
+    -- tb.tbMedia.tbDirectory.tbMIBObjects --
+    -- =================================== --
+    -- MIB Objects group --
+    tbMIBObjects OBJECT IDENTIFIER  ::= { tbDirectory 2 }
+
+    -- =========================================== --
+    -- tb.tbMedia.tbDirectory.tbMIBObjects.tbTraps --
+    -- =========================================== --
+    -- MIB Traps group --
+    tbTraps OBJECT IDENTIFIER ::= { tbMIBObjects 1 }
+
+    tbTrapsEntry  OBJECT IDENTIFIER ::= { tbTraps 0 }
+
+    tbNapAvailability NOTIFICATION-TYPE
+        OBJECTS { tbNapName, tbNapSignalingType, tbNapAvailablePercent }
+        STATUS  current
+        DESCRIPTION
+            "A tbNapAvailability trap signifies that the percentage of available circuits
+or channels of the NAP (Network Access Point) has changed."
+        ::= { tbTrapsEntry 1 }
+
+    tbPwrSupplyState NOTIFICATION-TYPE
+        OBJECTS { tbHwPwrSupplyName, tbHwPwrSupplyStatus }
+        STATUS  current
+        DESCRIPTION
+            "A tbPwrSupplyState trap signifies that the state of the dual power supply has changed.
+That dual power supply has a new state"
+        ::= { tbTrapsEntry 2 }
+
+    tbNp1State NOTIFICATION-TYPE
+        OBJECTS { tbHaNp1Name, tbHaNp1FunctionalState }
+        STATUS  current
+        DESCRIPTION
+            "A tbNp1State trap signifies that the state of the N+1 group has changed.
+That N+1 group has a new state"
+        ::= { tbTrapsEntry 3 }
+
+    tbAppState NOTIFICATION-TYPE
+        OBJECTS { tbHaAppName, tbHaAppCurrentState, tbHaAppHostName }
+        STATUS  current
+        DESCRIPTION
+            "A tbAppState trap signifies that the state of the application has changed.
+That application has a new state."
+        ::= { tbTrapsEntry 4 }
+
+    tbAppHaState NOTIFICATION-TYPE
+        OBJECTS { tbHaAppName, tbHaAppHaCurrentState, tbHaAppHostName }
+        STATUS  current
+        DESCRIPTION
+            "A tbAppHaState trap signifies that the high availability state
+of the application has changed.
+That application has a new high availability state."
+        ::= { tbTrapsEntry 5 }
+
+    tbClkGradeState NOTIFICATION-TYPE
+        OBJECTS { tbClockName, tbClockType, tbClockGrade }
+        STATUS  current
+        DESCRIPTION
+            "A tbClkGradeState trap signifies that the grade state of the clock has changed.
+That clock as a new grade state."
+        ::= { tbTrapsEntry 6 }
+
+    tbClkActiveState NOTIFICATION-TYPE
+        OBJECTS { tbClockName, tbClockType, tbClockActive }
+        STATUS  current
+        DESCRIPTION
+            "A tbClkActiveState trap signifies that the active state of the clock has changed.
+That clock as a new active state."
+        ::= { tbTrapsEntry 7 }
+
+    tbIsdnDChannelState NOTIFICATION-TYPE
+        OBJECTS { tbIsdnDescription, tbIsdnDChannelUp }
+        STATUS  current
+        DESCRIPTION
+            "A tbIsdnDChannelState trap signifies that the state of the channel that carries
+control and signalling information has changed.
+That D-Channel as a new state"
+        ::= { tbTrapsEntry 8 }
+
+    tbCASPhysicalLineState NOTIFICATION-TYPE
+        OBJECTS { tbCasDescription, tbCasPhysicalLineUp }
+        STATUS  current
+        DESCRIPTION
+            "A tbCASPhysicalLineState trap signifies that the state of the CAS physical line
+has changed.
+That CAS physical line as a new state"
+        ::= { tbTrapsEntry 9 }
+
+    tbSipState NOTIFICATION-TYPE
+        OBJECTS { tbSipDescription, tbSipCurrentState }
+        STATUS  current
+        DESCRIPTION
+            "A tbSipState trap signifies that the state of the stack SIP has changed.
+That SIP stack as a new state."
+        ::= { tbTrapsEntry 10 }
+
+    tbH248MgcState NOTIFICATION-TYPE
+        OBJECTS { tbH248MgcName, tbH248MgcCurrentState }
+        STATUS  current
+        DESCRIPTION
+            "A tbH248MgcState trap signifies that state of the H248 Media Gateway Controller
+has changed.
+That H248 media gateway controller as a new state."
+        ::= { tbTrapsEntry 11 }
+
+    tbHostUpdateAvailableState NOTIFICATION-TYPE
+        OBJECTS { tbHostName, tbHostUpdateAvailable }
+        STATUS  current
+        DESCRIPTION
+            "A tbHostUpdateAvailableState trap signifies that new updates are available on the host."
+        ::= { tbTrapsEntry 12 }
+
+    tbHostFirewallDdosState NOTIFICATION-TYPE
+        OBJECTS { tbHostName, tbHostFirewallDDOS }
+        STATUS  current
+        DESCRIPTION
+            "A tbHostFirewallDdosState trap signifies that the host firewall has detected excessive number of IP connections (potential DDOS attack)."
+        ::= { tbTrapsEntry 13 }
+
+
+    -- ============================== --
+    -- tb.tbMedia.tbCommon.tbHwCommon --
+    -- ============================== --
+    -- The Common group --
+    -- This group is divided in two sub-groups : Hardware and Software --
+    tbHwCommon OBJECT IDENTIFIER  ::= { tbCommon 1 }
+
+    -- ============================================= --
+    -- tb.tbMedia.tbCommon.tbHwCommon.tbHwIdentTable --
+    -- ============================================= --
+    -- The Hardware identification Table --
+    tbHwIdentTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF TBHwIdentEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "Hardware identification table."
+        ::= { tbHwCommon 1 }
+
+    tbHwIdentEntry OBJECT-TYPE
+        SYNTAX  TBHwIdentEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "An entry in the hardware identification table."
+        INDEX { tbHwIdentIndex }
+        ::= { tbHwIdentTable 1 }
+
+    TBHwIdentEntry ::=
+        SEQUENCE {
+            tbHwIdentIndex    Integer32,
+            tbHwSerialNumber  DisplayString,
+            tbHwShelfID       Integer32,
+            tbHwSlotID        Integer32,
+            tbHwPartNumber    DisplayString
+    }
+
+    tbHwIdentIndex OBJECT-TYPE
+        SYNTAX  Integer32 (0..2147483647)
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "An index which uniquely identify the entry in the table."
+        ::= { tbHwIdentEntry 1 }
+
+    tbHwSerialNumber OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Board serial number (format is TBxxxxxx where x is an integer)."
+        ::= { tbHwIdentEntry 2 }
+
+    tbHwShelfID OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Shelf identification of the board."
+        ::= { tbHwIdentEntry 3 }
+
+    tbHwSlotID OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Slot ID of the board within the shelf identified by the shelf ID field."
+        ::= { tbHwIdentEntry 4 }
+
+    tbHwPartNumber OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Board's part number."
+        ::= { tbHwIdentEntry 5 }
+
+    -- =============================================== --
+    -- tb.tbMedia.tbCommon.tbHwCommon.tbHwVersionTable --
+    -- =============================================== --
+    -- The Hardware version Table --
+    tbHwVersionTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF TBHwVersionEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "Hardware version table (FPGAs etc.)."
+        ::= { tbHwCommon 2 }
+
+    tbHwVersionEntry OBJECT-TYPE
+        SYNTAX  TBHwVersionEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "An entry in the hardware version table."
+        INDEX   { tbHwVersionIndex }
+        ::= { tbHwVersionTable 1 }
+
+    TBHwVersionEntry ::=
+        SEQUENCE {
+            tbHwVersionIndex          Integer32,
+            tbHwDescription           DisplayString,
+            tbHwVersionNum            DisplayString
+        }
+
+    tbHwVersionIndex OBJECT-TYPE
+        SYNTAX  Integer32 (0..2147483647)
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "An index which uniquely identify the entry in the table."
+        ::= { tbHwVersionEntry 1 }
+
+    tbHwDescription OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Hardware device associated to this entry."
+        ::= { tbHwVersionEntry 2 }
+
+    tbHwVersionNum OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "The version displayed as an hexadecimal string. If the device is not present, the value 8888=0x22B8 is returned."
+        ::= { tbHwVersionEntry 3 }
+
+    -- ============================================ --
+    -- tb.tbMedia.tbCommon.tbHwCommon.tbHwTempTable --
+    -- ============================================ --
+    -- The Hardware temperature Table --
+    tbHwTempTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF TBHwTempEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "Hardware device temperature table (FPGAs etc.)."
+        ::= { tbHwCommon 3 }
+
+    tbHwTempEntry OBJECT-TYPE
+        SYNTAX  TBHwTempEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "An entry in the hardware temperature table."
+        INDEX   { tbHwDeviceIndex }
+        ::= { tbHwTempTable 1 }
+
+    TBHwTempEntry ::=
+        SEQUENCE {
+            tbHwDeviceIndex       Integer32,
+            tbHwDeviceDescription DisplayString,
+            tbHwTemperature       Integer32
+        }
+
+    tbHwDeviceIndex    OBJECT-TYPE
+        SYNTAX  Integer32 (0..2147483647)
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "An index which uniquely identifies the entry in the device temperature table."
+        ::= { tbHwTempEntry 1 }
+
+    tbHwDeviceDescription OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Device description (PLD/FPGA, etc.)."
+        ::= { tbHwTempEntry 2 }
+
+    tbHwTemperature OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "The device temperature in Celsius. A value of 8888 indicates that the device is not present."
+        ::= { tbHwTempEntry 3 }
+
+    -- ==================================================== --
+    -- tb.tbMedia.tbCommon.tbHwCommon.tbHwPowerSupplyNumber --
+    -- ==================================================== --
+    -- The Hardware Power Supply Number --
+    tbHwPowerSupplyNumber OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of power supply present in the table."
+        ::= { tbHwCommon 4 }
+
+    -- =================================================== --
+    -- tb.tbMedia.tbCommon.tbHwCommon.tbHwPowerSupplyTable --
+    -- =================================================== --
+    -- The Hardware Power Supply Table --
+    tbHwPowerSupplyTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF TBHwPowerSupplyEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "Power supply table."
+        ::= { tbHwCommon 5 }
+
+    tbHwPowerSupplyEntry OBJECT-TYPE
+        SYNTAX  TBHwPowerSupplyEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "An entry in the power supply table."
+        INDEX { tbModuleIndex }
+        ::= { tbHwPowerSupplyTable 1 }
+
+    TBHwPowerSupplyEntry ::=
+        SEQUENCE {
+            tbHwPwrSupplyName         DisplayString,
+            tbHwPwrSupplyStatus       INTEGER
+    }
+
+    tbHwPwrSupplyName OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Power supply name."
+        ::= { tbHwPowerSupplyEntry 1 }
+
+    tbHwPwrSupplyStatus OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          good(0),
+                          failure(1)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current status of a power supply."
+        ::= { tbHwPowerSupplyEntry 2 }
+
+    -- ============================================ --
+    -- tb.tbMedia.tbCommon.tbHwCommon.tbHwFanNumber --
+    -- ============================================ --
+    -- The Hardware FAN Number --
+    tbHwFanNumber OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of fan present in the table."
+        ::= { tbHwCommon 6 }
+
+    -- =========================================== --
+    -- tb.tbMedia.tbCommon.tbHwCommon.tbHwFanTable --
+    -- =========================================== --
+    -- The Hardware FAN Table --
+    tbHwFanTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF TBHwFanEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "Fan table."
+        ::= { tbHwCommon 7 }
+
+    tbHwFanEntry OBJECT-TYPE
+        SYNTAX  TBHwFanEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "An entry in the fan table."
+        INDEX { tbModuleIndex }
+        ::= { tbHwFanTable 1 }
+
+    TBHwFanEntry ::=
+        SEQUENCE {
+            tbHwFanName         DisplayString,
+            tbHwFanCurrentSpeed DisplayString
+    }
+
+    tbHwFanName OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Fan name."
+        ::= { tbHwFanEntry 1 }
+
+    tbHwFanCurrentSpeed OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current speed of a fan (tach units)."
+          ::= { tbHwFanEntry 2 }
+
+    -- ============================== --
+    -- tb.tbMedia.tbCommon.tbSwCommon --
+    -- ============================== --
+    -- The Common Sw Group --
+    tbSwCommon OBJECT IDENTIFIER  ::= { tbCommon 2 }
+
+    -- ============================================= --
+    -- tb.tbMedia.tbCommon.tbSwCommon.tbFeatureTable --
+    -- ============================================= --
+    -- The TB Software feature Table --
+    tbFeatureTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF TBFeatureEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "Feature table."
+        ::= { tbSwCommon 1 }
+
+    tbFeatureEntry OBJECT-TYPE
+        SYNTAX  TBFeatureEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "An entry in the Feature table."
+        INDEX   { tbFeatureType }
+        ::= { tbFeatureTable 1 }
+
+    TBFeatureEntry ::=
+        SEQUENCE {
+            tbFeatureType             Integer32,
+            tbFeatureDescription      DisplayString,
+            tbFeatureLicensed         Integer32,
+            tbFeatureMax              Integer32
+        }
+
+    tbFeatureType OBJECT-TYPE
+        SYNTAX  Integer32 (0..2147483647)
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "An integer which uniquely identify the feature."
+        ::= { tbFeatureEntry 1 }
+
+    tbFeatureDescription OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Feature description."
+        ::= { tbFeatureEntry 2 }
+
+    tbFeatureLicensed OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Licensed feature count (maximum value supported by software)."
+          ::= { tbFeatureEntry 3 }
+
+    tbFeatureMax OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Maximum allowed feature count (maximum value supported by the hardware)."
+        ::= { tbFeatureEntry 4 }
+
+    -- =============================================== --
+    -- tb.tbMedia.tbCommon.tbSwCommon.tbSwVersionTable --
+    -- =============================================== --
+    -- The TB Software version Table --
+    tbSwVersionTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF TBSwVersionEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "Software version table."
+        ::= { tbSwCommon 2 }
+
+    tbSwVersionEntry OBJECT-TYPE
+        SYNTAX  TBSwVersionEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "An entry in the software version table."
+        INDEX   { tbSwVersionIndex }
+        ::= { tbSwVersionTable 1 }
+
+    TBSwVersionEntry ::=
+        SEQUENCE {
+            tbSwVersionIndex          Integer32,
+            tbSwComponentName         DisplayString,
+            tbSwVersionDescription    DisplayString,
+            tbSwVersionTag            DisplayString
+        }
+
+    tbSwVersionIndex OBJECT-TYPE
+        SYNTAX  Integer32 (0..2147483647)
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "An index that uniquely identify the software component in table."
+        ::= { tbSwVersionEntry  1 }
+
+    tbSwComponentName OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Software component's name."
+        ::= { tbSwVersionEntry 2 }
+
+    tbSwVersionDescription OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Software release description."
+        ::= { tbSwVersionEntry 3 }
+
+    tbSwVersionTag OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Build tag used to generate the software release."
+        ::= { tbSwVersionEntry  4 }
+
+    -- ============================================ --
+    -- tb.tbMedia.tbCommon.tbSwCommon.tbSwPerfTable --
+    -- ============================================ --
+    -- The TB Software performance Table --
+    tbSwPerfTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF TBSwPerfEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "Software performance table."
+        ::= { tbSwCommon 3 }
+
+    tbSwPerfEntry OBJECT-TYPE
+        SYNTAX  TBSwPerfEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "An entry in the software performance table."
+        INDEX   { tbSwPerfIndex }
+        ::= { tbSwPerfTable 1 }
+
+    TBSwPerfEntry ::=
+        SEQUENCE {
+            tbSwPerfIndex             Integer32,
+            tbSwPerfDescription       DisplayString,
+            tbSwPerfCpuUsage          Integer32,
+            tbSwPerfMemoryUsage       Integer32,
+            tbSwPerfMemorySize        Integer32
+        }
+
+    tbSwPerfIndex OBJECT-TYPE
+        SYNTAX  Integer32 (0..2147483647)
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "An index that uniquely identify the entry in the software performance table."
+        ::= { tbSwPerfEntry  1 }
+
+    tbSwPerfDescription OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "CPU and memory unit description."
+        ::= { tbSwPerfEntry 2 }
+
+    tbSwPerfCpuUsage OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "CPU usage in percent."
+        ::= { tbSwPerfEntry  3 }
+
+    tbSwPerfMemoryUsage OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Memory usage in percent."
+        ::= { tbSwPerfEntry  4 }
+
+    tbSwPerfMemorySize OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total memory size."
+        ::= { tbSwPerfEntry  5 }
+
+
+    -- ============================= --
+    -- tb.tbMedia.tbSignaling.tbMtp2 --
+    -- ============================= --
+    -- Signaling Group (MTP2) --
+    tbMtp2 OBJECT IDENTIFIER  ::= { tbSignaling 1 }
+
+    -- ============================================= --
+    -- tb.tbMedia.tbSignaling.tbMtp2.tbMtp2LinkTable --
+    -- ============================================= --
+    -- MTP2 Link Table --
+    tbMtp2LinkTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF TBMtp2Entry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "Lists MTP2 link status information."
+        ::= { tbMtp2 1 }
+
+    tbMtp2LinkEntry OBJECT-TYPE
+        SYNTAX  TBMtp2Entry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "MTP2 link table entry."
+        INDEX   { tbMtp2LinkIfIndex }
+        ::= { tbMtp2LinkTable 1 }
+
+    TBMtp2Entry ::=
+        SEQUENCE {
+                   tbMtp2LinkIfIndex            Integer32,
+                   tbMtp2LinkDescription        DisplayString,
+                   tbMtp2LinkStatus             INTEGER,
+                   tbMtp2TimeslotCount          Integer32,
+                   tbMtp2TimeslotMask           Gauge32
+                 }
+
+    tbMtp2LinkIfIndex OBJECT-TYPE
+        SYNTAX  Integer32 (0..2147483647)
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "The index which uniquely identifies the MTP2 link in the IF table."
+        ::= {tbMtp2LinkEntry 1 }
+
+    tbMtp2LinkDescription OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "A brief description describing the MTP2 link."
+        ::= { tbMtp2LinkEntry 2 }
+
+    tbMtp2LinkStatus OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          up(1),
+                          down(2),
+                          notAllocated(3)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current status of the MTP2 link."
+        ::= { tbMtp2LinkEntry 3 }
+
+    tbMtp2TimeslotCount OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Timeslots count are currently used by a MTP2 link."
+        ::= { tbMtp2LinkEntry 4 }
+
+    tbMtp2TimeslotMask OBJECT-TYPE
+        SYNTAX  Gauge32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Timeslots mask (out of 32) are currently used by a MTP2 link."
+    ::= { tbMtp2LinkEntry 5 }
+
+
+    -- ============================= --
+    -- tb.tbMedia.tbSignaling.tbM2pa --
+    -- ============================= --
+    -- Signaling Group (M2PA) --
+    tbM2pa OBJECT IDENTIFIER  ::= { tbSignaling 2 }
+
+    -- ============================================= --
+    -- tb.tbMedia.tbSignaling.tbM2pa.tbM2paLinkTable --
+    -- ============================================= --
+    -- M2PA Link Table --
+    tbM2paLinkTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF TBM2paLinkEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "Lists M2PA link status information."
+        ::= { tbM2pa 1 }
+
+    tbM2paLinkEntry OBJECT-TYPE
+        SYNTAX  TBM2paLinkEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "M2PA link table entry."
+        INDEX   { tbM2paLinkIfIndex }
+        ::= { tbM2paLinkTable 1 }
+
+    TBM2paLinkEntry ::=
+        SEQUENCE {
+                   tbM2paLinkIfIndex               Integer32,
+                   tbM2paLinkDescription           DisplayString,
+                   tbM2paLinkStatus                INTEGER,
+                   tbM2paLinkRXCurrentBandwidth    Integer32,
+                   tbM2paLinkTXCurrentBandwidth    Integer32,
+                   tbM2paLinkRXPeakBandwidth       Integer32,
+                   tbM2paLinkTXPeakBandwidth       Integer32
+                 }
+
+    tbM2paLinkIfIndex OBJECT-TYPE
+        SYNTAX  Integer32 (0..2147483647)
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "The index which uniquely identifies the M2PA link in the table."
+        ::= {tbM2paLinkEntry 1 }
+
+    tbM2paLinkDescription OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "A brief description of the M2PA link."
+        ::= { tbM2paLinkEntry 2 }
+
+    tbM2paLinkStatus OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          up(1),
+                          down(2),
+                          notAllocated(3)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current status of the M2PA link."
+        ::= { tbM2paLinkEntry 3 }
+
+    tbM2paLinkRXCurrentBandwidth OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current bandwidth received on the M2PA link."
+        ::= { tbM2paLinkEntry 4 }
+
+    tbM2paLinkTXCurrentBandwidth OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current bandwidth transmitted on the M2PA link."
+        ::= { tbM2paLinkEntry 5 }
+
+    tbM2paLinkRXPeakBandwidth OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Peak bandwidth received on the M2PA link."
+        ::= { tbM2paLinkEntry 6 }
+
+    tbM2paLinkTXPeakBandwidth OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Peak bandwidth transmitted on the M2PA link."
+        ::= { tbM2paLinkEntry 7 }
+
+    -- ============================= --
+    -- tb.tbMedia.tbSignaling.tbM2ua --
+    -- ============================= --
+    -- Signaling Group (M2UA) --
+    tbM2ua OBJECT IDENTIFIER  ::= { tbSignaling 3 }
+
+    -- ============================================= --
+    -- tb.tbMedia.tbSignaling.tbM2ua.tbM2uaLinkTable --
+    -- ============================================= --
+    -- M2UA Link Table --
+    tbM2uaLinkTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF TBM2uaLinkEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "Lists M2UA link status information."
+        ::= { tbM2ua 1 }
+
+    tbM2uaLinkEntry OBJECT-TYPE
+        SYNTAX  TBM2uaLinkEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A M2UA link table entry."
+        INDEX   { tbM2uaLinkIfIndex }
+        ::= { tbM2uaLinkTable 1 }
+
+    TBM2uaLinkEntry ::=
+        SEQUENCE {
+                   tbM2uaLinkIfIndex       Integer32,
+                   tbM2uaLinkDescription   DisplayString,
+                   tbM2uaLinkStatus        INTEGER,
+                   tbM2uaLinkRxPdu         INTEGER,
+                   tbM2uaLinkTxPdu         INTEGER,
+                   tbM2uaLinkRxByte        INTEGER,
+                   tbM2uaLinkTxByte        INTEGER
+                 }
+
+    tbM2uaLinkIfIndex OBJECT-TYPE
+        SYNTAX  Integer32 (0..2147483647)
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "The index which uniquely identifies the M2UA link in the IF table."
+        ::= {tbM2uaLinkEntry 1 }
+
+    tbM2uaLinkDescription OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "A brief description of the M2UA link."
+        ::= { tbM2uaLinkEntry 2 }
+
+    tbM2uaLinkStatus OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          up(1),
+                          down(2),
+                          notAllocated(3)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current status of the M2UA link."
+        ::= { tbM2uaLinkEntry 3 }
+
+    tbM2uaLinkRxPdu OBJECT-TYPE
+        SYNTAX  INTEGER{
+                         notAllocated(-1)
+                       }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "PDU received count."
+        ::= { tbM2uaLinkEntry 4 }
+
+    tbM2uaLinkTxPdu OBJECT-TYPE
+        SYNTAX  INTEGER{
+                         notAllocated(-1)
+                       }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "PDU transmitted count."
+        ::= { tbM2uaLinkEntry 5 }
+
+    tbM2uaLinkRxByte OBJECT-TYPE
+        SYNTAX  INTEGER{
+                         notAllocated(-1)
+                       }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Bytes received count."
+        ::= { tbM2uaLinkEntry 6 }
+
+    tbM2uaLinkTxByte OBJECT-TYPE
+        SYNTAX  INTEGER{
+                         notAllocated(-1)
+                       }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Bytes transmitted count."
+        ::= { tbM2uaLinkEntry 7 }
+
+    -- ============================================= --
+    -- tb.tbMedia.tbSignaling.tbM2ua.tbM2uaPeerTable --
+    -- ============================================= --
+    -- M2UA Peer Table --
+    tbM2uaPeerTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF TBM2uaPeerEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "Lists M2UA peer status information."
+        ::= { tbM2ua 2 }
+
+    tbM2uaPeerEntry OBJECT-TYPE
+        SYNTAX  TBM2uaPeerEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A M2UA peer table entry."
+        INDEX   { tbM2uaPeerIfIndex }
+        ::= { tbM2uaPeerTable 1 }
+
+    TBM2uaPeerEntry ::=
+        SEQUENCE {
+                   tbM2uaPeerIfIndex          Integer32,
+                   tbM2uaPeerDescription      DisplayString,
+                   tbM2uaPeerState            INTEGER,
+                   tbM2uaPeerAspUp            INTEGER,
+                   tbM2uaPeerAspUpAck         INTEGER,
+                   tbM2uaPeerAspDwn           INTEGER,
+                   tbM2uaPeerAspDwnAck        INTEGER,
+                   tbM2uaPeerAspAct           INTEGER,
+                   tbM2uaPeerAspActAck        INTEGER,
+                   tbM2uaPeerAspInact         INTEGER,
+                   tbM2uaPeerAspInactAck      INTEGER,
+                   tbM2uaPeerHeartbeat        INTEGER,
+                   tbM2uaPeerHeartbeatAck     INTEGER,
+                   tbM2uaPeerNotify           INTEGER,
+                   tbM2uaPeerTxError          INTEGER,
+                   tbM2uaPeerRxError          INTEGER
+                 }
+
+    tbM2uaPeerIfIndex OBJECT-TYPE
+        SYNTAX  Integer32 (0..2147483647)
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "The index which uniquely identifies the M2UA peer in IF the table."
+        ::= {tbM2uaPeerEntry 1 }
+
+    tbM2uaPeerDescription OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "A brief description of the M2UA peer."
+        ::= { tbM2uaPeerEntry 2 }
+
+    tbM2uaPeerState OBJECT-TYPE
+        SYNTAX  INTEGER{
+                         notAllocated(-1),
+                         down(1),
+                         inactive(2),
+                         active(3)
+                       }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current state of the M2UA peer."
+        ::= { tbM2uaPeerEntry 3 }
+
+    tbM2uaPeerAspUp OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          notAllocated(-1)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "ASP up count."
+        ::= { tbM2uaPeerEntry 4 }
+
+    tbM2uaPeerAspUpAck OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          notAllocated(-1)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "ASP up acknowledge count."
+        ::= { tbM2uaPeerEntry 5 }
+
+    tbM2uaPeerAspDwn OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          notAllocated(-1)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "ASP down count."
+        ::= { tbM2uaPeerEntry 6 }
+
+    tbM2uaPeerAspDwnAck OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          notAllocated(-1)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "ASP down acknowledge count."
+        ::= { tbM2uaPeerEntry 7 }
+
+    tbM2uaPeerAspAct OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          notAllocated(-1)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "ASP active count."
+        ::= { tbM2uaPeerEntry 8 }
+
+    tbM2uaPeerAspActAck OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          notAllocated(-1)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "ASP active acknowledge count."
+        ::= { tbM2uaPeerEntry 9 }
+
+    tbM2uaPeerAspInact OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          notAllocated(-1)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "ASP inactive count."
+        ::= { tbM2uaPeerEntry 10 }
+
+    tbM2uaPeerAspInactAck OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          notAllocated(-1)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "ASP inactive acknowledge count."
+        ::= { tbM2uaPeerEntry 11 }
+
+    tbM2uaPeerHeartbeat OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          notAllocated(-1)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "M2UA peer heartbeat count."
+        ::= { tbM2uaPeerEntry 12 }
+
+    tbM2uaPeerHeartbeatAck OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          notAllocated(-1)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "M2UA peer heartbeat acknowledge count."
+        ::= { tbM2uaPeerEntry 13 }
+
+    tbM2uaPeerNotify OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          notAllocated(-1)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "M2UA peer notify count."
+        ::= { tbM2uaPeerEntry 14 }
+
+    tbM2uaPeerTxError OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          notAllocated(-1)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "M2UA peer transmitted error count."
+        ::= { tbM2uaPeerEntry 15 }
+
+    tbM2uaPeerRxError OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          notAllocated(-1)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "M2UA peer received error count."
+        ::= { tbM2uaPeerEntry 16 }
+
+    -- ============================ --
+    -- tb.tbMedia.tbSignaling.tbIua --
+    -- ============================ --
+    -- Signaling Group (IUA) --
+    tbIua OBJECT IDENTIFIER  ::= { tbSignaling 4 }
+
+    -- =========================================== --
+    -- tb.tbMedia.tbSignaling.tbIua.tbIuaLinkTable --
+    -- =========================================== --
+    -- IUA Link Table --
+    tbIuaLinkTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF TBIuaLinkEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "Lists IUA link status information."
+        ::= { tbIua 1 }
+
+    tbIuaLinkEntry OBJECT-TYPE
+        SYNTAX  TBIuaLinkEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "An IUA link table entry."
+        INDEX   { tbIuaLinkIfIndex }
+        ::= { tbIuaLinkTable 1 }
+
+    TBIuaLinkEntry ::=
+        SEQUENCE {
+                   tbIuaLinkIfIndex           Integer32,
+                   tbIuaLinkDescription       DisplayString,
+                   tbIuaLinkStatus            INTEGER,
+                   tbIuaLinkRxPdu             INTEGER,
+                   tbIuaLinkTxPdu             INTEGER,
+                   tbIuaLinkRxByte            INTEGER,
+                   tbIuaLinkTxByte            INTEGER
+                 }
+
+    tbIuaLinkIfIndex OBJECT-TYPE
+        SYNTAX  Integer32 (0..2147483647)
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "The index which uniquely identifies the IUA link in the IF table."
+        ::= {tbIuaLinkEntry 1 }
+
+    tbIuaLinkDescription OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "A brief description of the IUA link."
+        ::= { tbIuaLinkEntry 2 }
+
+    tbIuaLinkStatus OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          up(1),
+                          down(2),
+                          notAllocated(3)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current status of the IUA link."
+        ::= { tbIuaLinkEntry 3 }
+
+    tbIuaLinkRxPdu OBJECT-TYPE
+        SYNTAX  INTEGER{
+                         notAllocated(-1)
+                       }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "PDU received count."
+        ::= { tbIuaLinkEntry 4 }
+
+    tbIuaLinkTxPdu OBJECT-TYPE
+        SYNTAX  INTEGER{
+                         notAllocated(-1)
+                       }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "PDU transmitted count."
+        ::= { tbIuaLinkEntry 5 }
+
+    tbIuaLinkRxByte OBJECT-TYPE
+        SYNTAX  INTEGER{
+                         notAllocated(-1)
+                       }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Bytes received count."
+        ::= { tbIuaLinkEntry 6 }
+
+    tbIuaLinkTxByte OBJECT-TYPE
+        SYNTAX  INTEGER{
+                         notAllocated(-1)
+                       }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Bytes transmitted count."
+        ::= { tbIuaLinkEntry 7 }
+
+    -- =========================================== --
+    -- tb.tbMedia.tbSignaling.tbIua.tbIuaPeerTable --
+    -- =========================================== --
+    -- IUA Peer Table --
+    tbIuaPeerTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF TBIuaPeerEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "Lists IUA peer status information."
+        ::= { tbIua 2 }
+
+    tbIuaPeerEntry OBJECT-TYPE
+        SYNTAX  TBIuaPeerEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "An IUA peer table entry."
+        INDEX   { tbIuaPeerIfIndex }
+        ::= { tbIuaPeerTable 1 }
+
+    TBIuaPeerEntry ::=
+        SEQUENCE {
+                   tbIuaPeerIfIndex         Integer32,
+                   tbIuaPeerDescription     DisplayString,
+                   tbIuaPeerState           INTEGER,
+                   tbIuaPeerRxAspUp         Integer32,
+                   tbIuaPeerTxAspUp         Integer32,
+                   tbIuaPeerRxAspDwn        Integer32,
+                   tbIuaPeerTxAspDwn        Integer32,
+                   tbIuaPeerRxAspAct        Integer32,
+                   tbIuaPeerTxAspAct        Integer32,
+                   tbIuaPeerRxAspInact      Integer32,
+                   tbIuaPeerTxAspInact      Integer32,
+                   tbIuaPeerRxNotify        Integer32,
+                   tbIuaPeerTxNotify        Integer32,
+                   tbIuaPeerRxError         Integer32,
+                   tbIuaPeerTxError         Integer32,
+                   tbIuaPeerRxPdu           Integer32,
+                   tbIuaPeerTxPdu           Integer32,
+                   tbIuaPeerRxByte          Integer32,
+                   tbIuaPeerTxByte          Integer32
+                 }
+
+    tbIuaPeerIfIndex OBJECT-TYPE
+        SYNTAX  Integer32 (0..2147483647)
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "The index which uniquely identifies the IUA peer in the IF table."
+    ::= {tbIuaPeerEntry 1 }
+
+    tbIuaPeerDescription OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "A brief description of the IUA peer."
+        ::= { tbIuaPeerEntry 2 }
+
+    tbIuaPeerState OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          down(1),
+                          inactive(2),
+                          active(3)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current state of the IUA peer."
+        ::= { tbIuaPeerEntry 3 }
+
+    tbIuaPeerRxAspUp OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "ASP-UP message received count."
+        ::= { tbIuaPeerEntry 4 }
+
+    tbIuaPeerTxAspUp OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "ASP-UP message transmitted count."
+        ::= { tbIuaPeerEntry 5 }
+
+    tbIuaPeerRxAspDwn OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "ASP-DOWN message received count."
+        ::= { tbIuaPeerEntry 6 }
+
+    tbIuaPeerTxAspDwn OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "ASP-DOWN message transmitted count."
+        ::= { tbIuaPeerEntry 7 }
+
+    tbIuaPeerRxAspAct OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "ASP-ACT message received count."
+        ::= { tbIuaPeerEntry 8 }
+
+    tbIuaPeerTxAspAct OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "ASP-ACT message transmitted count."
+        ::= { tbIuaPeerEntry 9 }
+
+    tbIuaPeerRxAspInact OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "ASP-INACT message received count."
+        ::= { tbIuaPeerEntry 10 }
+
+    tbIuaPeerTxAspInact OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "ASP-INACT message transmitted count."
+        ::= { tbIuaPeerEntry 11 }
+
+    tbIuaPeerRxNotify OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Notify message received count."
+        ::= { tbIuaPeerEntry 12 }
+
+    tbIuaPeerTxNotify OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Notify message transmitted count."
+        ::= { tbIuaPeerEntry 13 }
+
+    tbIuaPeerRxError OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Error message received count."
+        ::= { tbIuaPeerEntry 14 }
+
+    tbIuaPeerTxError OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Error message transmitted count."
+        ::= { tbIuaPeerEntry 15 }
+
+    tbIuaPeerRxPdu OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Pdu received count."
+        ::= { tbIuaPeerEntry 16 }
+
+    tbIuaPeerTxPdu OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Pdu transmitted count."
+        ::= { tbIuaPeerEntry 17 }
+
+    tbIuaPeerRxByte OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Bytes received count."
+        ::= { tbIuaPeerEntry 18 }
+
+    tbIuaPeerTxByte OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Bytes transmitted count."
+        ::= { tbIuaPeerEntry 19 }
+
+    -- =========================================== --
+    -- tb.tbMedia.tbSignaling.tbIua.tbIuaLapdTable --
+    -- =========================================== --
+    -- IUA LAPD Table --
+    tbIuaLapdTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF TBIuaLapdEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "Lists IUA LAPD link status information."
+        ::= { tbIua 3 }
+
+    tbIuaLapdEntry OBJECT-TYPE
+        SYNTAX  TBIuaLapdEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "An IUA LAPD link table entry."
+        INDEX   { tbIuaLapdIfIndex }
+        ::= { tbIuaLapdTable 1 }
+
+    TBIuaLapdEntry ::=
+        SEQUENCE {
+                   tbIuaLapdIfIndex               Integer32,
+                   tbIuaLapdDescription           DisplayString,
+                   tbIuaLapdStatus                INTEGER,
+                   tbIuaLapdRXCurrentBandwidth    Integer32,
+                   tbIuaLapdTXCurrentBandwidth    Integer32,
+                   tbIuaLapdRXPeakBandwidth       Integer32,
+                   tbIuaLapdTXPeakBandwidth       Integer32
+                 }
+
+    tbIuaLapdIfIndex OBJECT-TYPE
+        SYNTAX  Integer32 (0..2147483647)
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "The index which uniquely identifies the IUA LAPD link in the IF table."
+        ::= {tbIuaLapdEntry 1 }
+
+    tbIuaLapdDescription OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "A brief description of the IUA LAPD link."
+        ::= { tbIuaLapdEntry 2 }
+
+    tbIuaLapdStatus OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          up(1),
+                          down(2)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current status of the IUA LAPD link."
+        ::= { tbIuaLapdEntry 3 }
+
+    tbIuaLapdRXCurrentBandwidth OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current bandwidth recieved on the IUA LAPD link."
+        ::= { tbIuaLapdEntry 4 }
+
+    tbIuaLapdTXCurrentBandwidth OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current bandwidth tranmitted on the IUA LAPD link."
+        ::= { tbIuaLapdEntry 5 }
+
+    tbIuaLapdRXPeakBandwidth OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Peak bandwidth received on the IUA LAPD link."
+        ::= { tbIuaLapdEntry 6 }
+
+    tbIuaLapdTXPeakBandwidth OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Peak bandwidth transmitted on the IUA LAPD link."
+        ::= { tbIuaLapdEntry 7 }
+
+    -- ============================= --
+    -- tb.tbMedia.tbSignaling.tbM3ua --
+    -- ============================= --
+    -- Signaling Group (M3UA) --
+    tbM3ua OBJECT IDENTIFIER  ::= { tbSignaling 5 }
+
+    -- ============================================ --
+    -- tb.tbMedia.tbSignaling.tbM3ua.tbM3uaGenTable --
+    -- ============================================ --
+    -- M3UA Gen Table --
+    tbM3uaGenTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF TBM3uaGenEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "Lists general M3UA configuration statistics."
+        ::= { tbM3ua 1 }
+
+    tbM3uaGenEntry OBJECT-TYPE
+        SYNTAX  TBM3uaGenEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A M3UA general table entry."
+        INDEX   { tbModuleIndex }
+        ::= { tbM3uaGenTable 1 }
+
+    TBM3uaGenEntry ::=
+        SEQUENCE {
+                   tbM3uaGenDescription       DisplayString,
+                   tbM3uaGenModuleState       INTEGER,
+                   tbM3uaGenNetworkMax        Integer32,
+                   tbM3uaGenNetworkCnt        Integer32,
+                   tbM3uaGenUserpartMax       Integer32,
+                   tbM3uaGenUserpartCnt       Integer32,
+                   tbM3uaGenPSPMax            Integer32,
+                   tbM3uaGenPSPCnt            Integer32,
+                   tbM3uaGenPsrvMax           Integer32,
+                   tbM3uaGenPsrvCnt           Integer32,
+                   tbM3uaGenRouteMax          Integer32,
+                   tbM3uaGenRouteCnt          Integer32,
+                   tbM3uaGenSAPMax            Integer32,
+                   tbM3uaGenSAPCnt            Integer32,
+                   tbM3uaGenMemSize           Integer32,
+                   tbM3uaGenMemAlloc          Integer32
+                 }
+
+    tbM3uaGenDescription OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "A brief description of the M3UA system."
+        ::= { tbM3uaGenEntry 1 }
+
+    tbM3uaGenModuleState OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          oos(1),
+                          active(2),
+                          standby(3)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current state of the M3UA module."
+        ::= { tbM3uaGenEntry 2 }
+
+    tbM3uaGenNetworkMax OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Maximum number of M3UA networks allowed by the configuration."
+        ::= { tbM3uaGenEntry 3 }
+
+    tbM3uaGenNetworkCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current number of M3UA networks used by the configuration."
+        ::= { tbM3uaGenEntry 4 }
+
+    tbM3uaGenUserpartMax OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Maximum number of M3UA userparts allowed by the configuration."
+        ::= { tbM3uaGenEntry 5 }
+
+    tbM3uaGenUserpartCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current number of M3UA userparts used by the configuration."
+        ::= { tbM3uaGenEntry 6 }
+
+    tbM3uaGenPSPMax OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Maximum number of M3UA peer server processes allowed by the configuration."
+        ::= { tbM3uaGenEntry 7 }
+
+    tbM3uaGenPSPCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current number of M3UA peer server processes used by the configuration."
+        ::= { tbM3uaGenEntry 8 }
+
+    tbM3uaGenPsrvMax OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Maximum number of M3UA peer servers allowed by the configuration."
+        ::= { tbM3uaGenEntry 9 }
+
+    tbM3uaGenPsrvCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current number of M3UA peer servers used by the configuration."
+        ::= { tbM3uaGenEntry 10 }
+
+    tbM3uaGenRouteMax OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Maximum number of M3UA routes allowed by the configuration."
+        ::= { tbM3uaGenEntry 11 }
+
+    tbM3uaGenRouteCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current number of M3UA routes used by the configuration."
+        ::= { tbM3uaGenEntry 12 }
+
+    tbM3uaGenSAPMax OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Maximum number of M3UA service access points allowed by the configuration."
+        ::= { tbM3uaGenEntry 13 }
+
+    tbM3uaGenSAPCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current number of M3UA service access points used by the configuration."
+        ::= { tbM3uaGenEntry 14 }
+
+    tbM3uaGenMemSize OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Maximum memory size allowed for the M3UA layer."
+        ::= { tbM3uaGenEntry 15 }
+
+    tbM3uaGenMemAlloc OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current amount of memory allocated for the M3UA layer."
+        ::= { tbM3uaGenEntry 16 }
+
+    -- ============================================ --
+    -- tb.tbMedia.tbSignaling.tbM3ua.tbM3uaSapTable --
+    -- ============================================ --
+    -- M3UA SAP Table --
+    tbM3uaSapTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF TBM3uaSapEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "Lists M3UA SAP status and statistics."
+        ::= { tbM3ua 2 }
+
+    tbM3uaSapEntry OBJECT-TYPE
+        SYNTAX  TBM3uaSapEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A M3UA SAP table entry."
+        INDEX   { tbM3uaSapIfIndex }
+        ::= { tbM3uaSapTable 1 }
+
+    TBM3uaSapEntry ::=
+        SEQUENCE {
+                   tbM3uaSapIfIndex         Integer32,
+                   tbM3uaSapDescription     DisplayString,
+                   tbM3uaSapOpen            INTEGER,
+                   tbM3uaSapState           INTEGER
+                 }
+
+    tbM3uaSapIfIndex OBJECT-TYPE
+        SYNTAX  Integer32 (0..2147483647)
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "The index which uniquely identifies the M3UA SAP in the IF table."
+        ::= {tbM3uaSapEntry 1 }
+
+    tbM3uaSapDescription OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "A brief description of the M3UA Sap system."
+        ::= { tbM3uaSapEntry 2 }
+
+    tbM3uaSapOpen OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          open(1),
+                          closed(2),
+                          notAllocated(3)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Indicates whether the M3UA SAP is open or closed."
+        ::= { tbM3uaSapEntry 3 }
+
+    tbM3uaSapState OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          ready(1),
+                          notReady(2),
+                          notAllocated(3)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current state of the M3ua SAP."
+        ::= { tbM3uaSapEntry 4 }
+
+
+    -- ============================================ --
+    -- tb.tbMedia.tbSignaling.tbM3ua.tbM3uaPspTable --
+    -- ============================================ --
+    -- M3UA PSP Table --
+    tbM3uaPspTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF TBM3uaPspEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "Lists M3UA PSP status and statistics."
+        ::= { tbM3ua 3 }
+
+    tbM3uaPspEntry OBJECT-TYPE
+        SYNTAX  TBM3uaPspEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A M3UA peer signaling process table entry."
+        INDEX   { tbM3uaPspIfIndex }
+        ::= { tbM3uaPspTable 1 }
+
+    TBM3uaPspEntry ::=
+        SEQUENCE {
+                   tbM3uaPspIfIndex            Integer32,
+                   tbM3uaPspDescription        DisplayString,
+                   tbM3uaPspType               INTEGER,
+                   tbM3uaPspEndpointStatus1    INTEGER,
+                   tbM3uaPspEndpointStatus2    INTEGER,
+                   tbM3uaPspEndpointStatus3    INTEGER,
+                   tbM3uaPspEndpointStatus4    INTEGER
+                 }
+
+    tbM3uaPspIfIndex OBJECT-TYPE
+        SYNTAX  Integer32 (0..2147483647)
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "The index which uniquely identifies the M3UA peer signaling process in the IF table."
+        ::= {tbM3uaPspEntry 1 }
+
+    tbM3uaPspDescription OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "A brief description of the M3UA peer signaling process."
+        ::= { tbM3uaPspEntry 2 }
+
+    tbM3uaPspType OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          sgp(1),
+                          asp(2),
+                          ipsp(3),
+                          notAllocated(4)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Type of the M3UA peer signaling process."
+        ::= { tbM3uaPspEntry 3 }
+
+    tbM3uaPspEndpointStatus1 OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          up(1),
+                          down(2),
+                          notAllocated(3)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Indicates whether the M3UA SAP's first configurable endpoint is up or down."
+        ::= { tbM3uaPspEntry 4 }
+
+    tbM3uaPspEndpointStatus2 OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          up(1),
+                          down(2),
+                          notAllocated(3)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Indicates whether the M3UA SAP's second configurable endpoint is up or down."
+        ::= { tbM3uaPspEntry 5 }
+
+    tbM3uaPspEndpointStatus3 OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          up(1),
+                          down(2),
+                          notAllocated(3)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Indicates whether the M3UA SAP's third configurable endpoint is up or down."
+        ::= { tbM3uaPspEntry 6 }
+
+    tbM3uaPspEndpointStatus4 OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          up(1),
+                          down(2),
+                          notAllocated(3)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Indicates whether the M3UA SAP's fourth configurable endpoint is up or down."
+        ::= { tbM3uaPspEntry 7 }
+
+
+    -- ============================================= --
+    -- tb.tbMedia.tbSignaling.tbM3ua.tbM3uaPsrvTable --
+    -- ============================================= --
+    -- M3UA Peer Server Table --
+    tbM3uaPsrvTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF TBM3uaPsrvEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "Lists M3UA peer server status and statistics."
+        ::= { tbM3ua 4 }
+
+    tbM3uaPsrvEntry OBJECT-TYPE
+        SYNTAX  TBM3uaPsrvEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A M3UA peer server table entry."
+        INDEX   { tbM3uaPsrvIfIndex }
+        ::= { tbM3uaPsrvTable 1 }
+
+    TBM3uaPsrvEntry ::=
+        SEQUENCE {
+                   tbM3uaPsrvIfIndex         Integer32,
+                   tbM3uaPsrvDescription     DisplayString,
+                   tbM3uaPsrvAsState         INTEGER
+                 }
+
+    tbM3uaPsrvIfIndex OBJECT-TYPE
+        SYNTAX  Integer32 (0..2147483647)
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "The index which uniquely identifies the M3UA peer server in the IF table."
+        ::= {tbM3uaPsrvEntry 1 }
+
+    tbM3uaPsrvDescription OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "A brief description of the M3UA peer server."
+        ::= { tbM3uaPsrvEntry 2 }
+
+    tbM3uaPsrvAsState OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          undefined(0),
+                          down(1),
+                          inactive(2),
+                          active(3),
+                          pending(4)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current application server state for the M3UA peer server."
+        ::= { tbM3uaPsrvEntry 3 }
+
+
+    -- ============================= --
+    -- tb.tbMedia.tbSignaling.tbIsdn --
+    -- ============================= --
+    -- Signaling Group (Isdn) --
+    tbIsdn OBJECT IDENTIFIER  ::= { tbSignaling 6 }
+
+    -- ========================================== --
+    -- tb.tbMedia.tbSignaling.tbIsdn.tbIsdnNumber --
+    -- ========================================== --
+    -- ISDN Number --
+    tbIsdnNumber OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "The number of ISDNs present on this system."
+        ::= { tbIsdn 1 }
+
+    -- ============================================ --
+    -- tb.tbMedia.tbSignaling.tbIsdn.tbIsdnTable --
+    -- ============================================ --
+    -- ISDN Table --
+    tbIsdnTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF TBIsdnEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "Lists Isdn status and statistics."
+        ::= { tbIsdn 2 }
+
+    tbIsdnEntry OBJECT-TYPE
+        SYNTAX  TBIsdnEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A Isdn table entry."
+        INDEX   { tbModuleIndex }
+        ::= { tbIsdnTable 1 }
+
+    TBIsdnEntry ::=
+        SEQUENCE {
+                   tbIsdnIfIndex                 Integer32,
+                   tbIsdnDescription             DisplayString,
+                   tbIsdnDChannelUp              INTEGER,
+                   tbIsdnNbSecSinceLastUpEvent   Integer32,
+                   tbIsdnRxValidFrame            Integer32,
+                   tbIsdnRxFrameToStack          Integer32,
+                   tbIsdnTxFrameFromStack        Integer32,
+                   tbIsdnNbInitiated             Integer32,
+                   tbIsdnInitiatedIncoming       Integer32,
+                   tbIsdnInitiatedOutgoing       Integer32,
+                   tbIsdnNbDisconnected          Integer32,
+                   tbIsdnNbDisconnectedLocally   Integer32,
+                   tbIsdnNbDisconnectedRemotely  Integer32,
+                   tbIsdnMeanAsr                 Integer32,
+                   tbIsdnMeanBhca                Integer32,
+                   tbIsdnNbAnsweredIncoming      Integer32,
+                   tbIsdnNbAnsweredOutgoing      Integer32,
+                   tbIsdnNbActive                Integer32
+                 }
+
+    tbIsdnIfIndex OBJECT-TYPE
+        SYNTAX  Integer32 (0..2147483647)
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "(Not Applicable)
+The index which uniquely identifies the Isdn in the IF table."
+        ::= {tbIsdnEntry 1 }
+
+    tbIsdnDescription OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "A brief description of the Isdn."
+        ::= { tbIsdnEntry 2 }
+
+    tbIsdnDChannelUp OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          no(0),
+                          yes(1)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Whether or not the state is up."
+        ::= { tbIsdnEntry 3 }
+
+    tbIsdnNbSecSinceLastUpEvent OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of seconds elapsed since last D-Channel UP event."
+        ::= { tbIsdnEntry 4 }
+
+    tbIsdnRxValidFrame OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of received valid frames."
+        ::= { tbIsdnEntry 5 }
+
+    tbIsdnRxFrameToStack OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of received frames sent to stack."
+        ::= { tbIsdnEntry 6 }
+
+    tbIsdnTxFrameFromStack OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of transmitted frames from stack."
+        ::= { tbIsdnEntry 7 }
+
+    tbIsdnNbInitiated OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total number of calls."
+        ::= { tbIsdnEntry 8 }
+
+    tbIsdnInitiatedIncoming OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of incoming calls."
+        ::= { tbIsdnEntry 9 }
+
+    tbIsdnInitiatedOutgoing OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of outgoing calls."
+        ::= { tbIsdnEntry 10 }
+
+    tbIsdnNbDisconnected OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total number of disconnected calls."
+        ::= { tbIsdnEntry 11 }
+
+    tbIsdnNbDisconnectedLocally OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of locally disconnected calls."
+        ::= { tbIsdnEntry 12 }
+
+    tbIsdnNbDisconnectedRemotely OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of remotely disconnected calls."
+        ::= { tbIsdnEntry 13 }
+
+    tbIsdnMeanAsr OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Mean answer-seizure-rate in percent."
+        ::= { tbIsdnEntry 14 }
+
+    tbIsdnMeanBhca OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Mean busy-hour-call-attempt."
+        ::= { tbIsdnEntry 15 }
+
+    tbIsdnNbAnsweredIncoming OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of incoming answered calls."
+        ::= { tbIsdnEntry 16 }
+
+    tbIsdnNbAnsweredOutgoing OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of outgoing answered calls."
+        ::= { tbIsdnEntry 17 }
+
+    tbIsdnNbActive OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of calls that reached the active state."
+        ::= { tbIsdnEntry 18 }
+
+
+    -- ============================ --
+    -- tb.tbMedia.tbSignaling.tbCas --
+    -- ============================ --
+    -- Signaling Group (Cas) --
+    tbCas OBJECT IDENTIFIER  ::= { tbSignaling 7 }
+
+    -- ======================================== --
+    -- tb.tbMedia.tbSignaling.tbCas.tbCasNumber --
+    -- ======================================== --
+    -- CAS Number --
+    tbCasNumber OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "The number of CASs present on this system."
+        ::= { tbCas 1 }
+
+    -- ======================================= --
+    -- tb.tbMedia.tbSignaling.tbCas.tbCasTable --
+    -- ======================================= --
+    -- CAS Table --
+    tbCasTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF TBCasEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "Lists CAS status and statistics."
+        ::= { tbCas 2 }
+
+    tbCasEntry OBJECT-TYPE
+        SYNTAX  TBCasEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A CAS table entry."
+        INDEX   { tbModuleIndex }
+        ::= { tbCasTable 1 }
+
+    TBCasEntry ::=
+        SEQUENCE {
+                   tbCasIfIndex                  Integer32,
+                   tbCasDescription              DisplayString,
+                   tbCasPhysicalLineUp           INTEGER,
+                   tbCasSignalingLineUp          INTEGER,
+                   tbCasIdleCnt                  Integer32,
+                   tbCasDownCnt                  Integer32,
+                   tbCasIncomingCnt              Integer32,
+                   tbCasOutgoingCnt              Integer32,
+                   tbCasLocallyBlockedCnt        Integer32,
+                   tbCasRemotelyBlockedCnt       Integer32
+                 }
+
+    tbCasIfIndex OBJECT-TYPE
+        SYNTAX  Integer32 (0..2147483647)
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "(Not Applicable)
+The index which uniquely identifies the CAS in the IF table."
+        ::= {tbCasEntry 1 }
+
+    tbCasDescription OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "A brief description of the CAS."
+        ::= { tbCasEntry 2 }
+
+    tbCasPhysicalLineUp OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          no(0),
+                          yes(1)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Whether or not the state is up."
+        ::= { tbCasEntry 3 }
+
+    tbCasSignalingLineUp OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          no(0),
+                          yes(1)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Whether or not the state is up."
+        ::= { tbCasEntry 4 }
+
+    tbCasIdleCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of idle circuits."
+        ::= { tbCasEntry 5 }
+
+    tbCasDownCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of circuits in down state."
+        ::= { tbCasEntry 6 }
+
+    tbCasIncomingCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of active incoming circuits."
+        ::= { tbCasEntry 7 }
+
+    tbCasOutgoingCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of active outgoing circuits."
+        ::= { tbCasEntry 8 }
+
+    tbCasLocallyBlockedCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of circuits in locally blocked state (maintenance)."
+        ::= { tbCasEntry 9 }
+
+    tbCasRemotelyBlockedCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of circuits in remotely blocked state (maintenance)."
+        ::= { tbCasEntry 10 }
+
+
+    -- ============================ --
+    -- tb.tbMedia.tbSignaling.tbSip --
+    -- ============================ --
+    -- Signaling Group (Sip) --
+    tbSip OBJECT IDENTIFIER  ::= { tbSignaling 8 }
+
+    -- ======================================== --
+    -- tb.tbMedia.tbSignaling.tbSip.tbSipNumber --
+    -- ======================================== --
+    -- SIP Number --
+    tbSipNumber OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "The number of SIPs present on this system."
+        ::= { tbSip 1 }
+
+    -- ======================================= --
+    -- tb.tbMedia.tbSignaling.tbSip.tbSipTable --
+    -- ======================================= --
+    -- SIP Table --
+    tbSipTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF TBSipEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "Lists SIP status and statistics."
+        ::= { tbSip 2 }
+
+    tbSipEntry OBJECT-TYPE
+        SYNTAX  TBSipEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A SIP table entry."
+        INDEX   { tbModuleIndex }
+        ::= { tbSipTable 1 }
+
+    TBSipEntry ::=
+        SEQUENCE {
+                   tbSipIfIndex                      Integer32,
+                   tbSipDescription                  DisplayString,
+                   tbSipRequestInCnt                 Integer32,
+                   tbSipRequestOutCnt                Integer32,
+                   tbSipResponseInCnt                Integer32,
+                   tbSipResponseOutCnt               Integer32,
+                   tbSipRequestRetryCnt              Integer32,
+                   tbSipResponseRetryCnt             Integer32,
+                   tbSipCongestionPeriodCnt          Integer32,
+                   tbSipCriticalCongestionPeriodCnt  Integer32,
+                   tbSipCallCongestionPeriodCnt      Integer32,
+                   tbSipInCongestion                 Integer32,
+                   tbSipInCriticalCongestion         Integer32,
+                   tbSipInCallCongestion             Integer32,
+                   tbSipDecodeFailCnt                Integer32,
+                   tbSipEncodeFailCnt                Integer32,
+                   tbSipCurrentState                 INTEGER
+                 }
+
+    tbSipIfIndex OBJECT-TYPE
+        SYNTAX  Integer32 (0..2147483647)
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "(Not Applicable)
+The index which uniquely identifies the SIP in the IF table."
+        ::= {tbSipEntry 1 }
+
+    tbSipDescription OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "A brief description of the SIP."
+        ::= { tbSipEntry 2 }
+
+    tbSipRequestInCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total number of SIP request messages received, including retransmissions."
+        ::= { tbSipEntry 3 }
+
+    tbSipRequestOutCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total number of SIP request messages sent out, including retransmissions."
+        ::= { tbSipEntry 4 }
+
+    tbSipResponseInCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total number of SIP response messages received, including retransmissions."
+        ::= { tbSipEntry 5 }
+
+    tbSipResponseOutCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total number of SIP response messages sent out, including retransmissions."
+        ::= { tbSipEntry 6 }
+
+    tbSipRequestRetryCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total number of SIP request retransmissions sent."
+        ::= { tbSipEntry 7 }
+
+    tbSipResponseRetryCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total number of SIP response retransmissions sent."
+        ::= { tbSipEntry 8 }
+
+    tbSipCongestionPeriodCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of times the system came in memory congestion."
+        ::= { tbSipEntry 9 }
+
+    tbSipCriticalCongestionPeriodCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of times the system came in critical memory congestion."
+        ::= { tbSipEntry 10 }
+
+    tbSipCallCongestionPeriodCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of times the system came in call congestion."
+        ::= { tbSipEntry 11 }
+
+    tbSipInCongestion OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Stack is currently in memory congestion."
+        ::= { tbSipEntry 12 }
+
+    tbSipInCriticalCongestion OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Stack is currently in critical memory congestion."
+        ::= { tbSipEntry 13 }
+
+    tbSipInCallCongestion OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Stack is currently in call congestion."
+        ::= { tbSipEntry 14 }
+
+    tbSipDecodeFailCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of time a SIP message could not be decoded properly."
+        ::= { tbSipEntry 15 }
+
+    tbSipEncodeFailCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of time a SIP message could not be encoded properly."
+        ::= { tbSipEntry 16 }
+
+    tbSipCurrentState OBJECT-TYPE
+        SYNTAX  INTEGER{
+                          up(1),
+                          down(2)
+                       }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current state of the SIP stack."
+        ::= { tbSipEntry 17 }
+
+
+    -- ============================= --
+    -- tb.tbMedia.tbSignaling.tbH248 --
+    -- ============================= --
+    -- Signaling Group (H248) --
+    tbH248 OBJECT IDENTIFIER  ::= { tbSignaling 9 }
+
+    -- ============================================= --
+    -- tb.tbMedia.tbSignaling.tbH248.tbH248MgcNumber --
+    -- ============================================= --
+    -- H248 Media Gateway Controller Number --
+    tbH248MgcNumber OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "The number of H248 Media Gateway Controller present on this system."
+        ::= { tbH248 1 }
+
+    -- ============================================ --
+    -- tb.tbMedia.tbSignaling.tbH248.tbH248MgcTable --
+    -- ============================================ --
+    -- H248 Media Gateway Controller Table --
+    tbH248MgcTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF TBH248MgcEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "Lists H248 Media Gateway Controller status and statistics."
+        ::= { tbH248 2 }
+
+    tbH248MgcEntry OBJECT-TYPE
+        SYNTAX  TBH248MgcEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A H248 Media Gateway Controller table entry."
+        INDEX   { tbModuleIndex }
+        ::= { tbH248MgcTable 1 }
+
+    TBH248MgcEntry ::=
+        SEQUENCE {
+                   tbH248MgcName                     DisplayString,
+                   tbH248MgcAddress                  DisplayString,
+                   tbH248MgcCurrentState             INTEGER
+                 }
+
+    tbH248MgcName OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Name of the H248 Media Gateway Controller."
+        ::= { tbH248MgcEntry 1 }
+
+    tbH248MgcAddress OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Media Gateway Controller address."
+        ::= { tbH248MgcEntry 2 }
+
+    tbH248MgcCurrentState OBJECT-TYPE
+        SYNTAX  INTEGER{
+                          up(1),
+                          down(2),
+                          unknown(3)
+                       }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current communication state with Media Gateway Controller."
+        ::= { tbH248MgcEntry 3 }
+
+    -- H248 --
+    tbH248DroppedCallsFromCongestionCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Dropped calls from congestion."
+        ::= { tbH248 3 }
+
+    tbH248TotalMessagesSentCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total messages sent."
+        ::= { tbH248 4 }
+
+    tbH248TotalMessagesReceivedCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total messages received."
+        ::= { tbH248 5 }
+
+    tbH248CurrNbOfOOSFixTermCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current number of out of service fix termination."
+        ::= { tbH248 6 }
+
+    tbH248CurrNbOfISFixTermCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current number of in service fix termination."
+        ::= { tbH248 7 }
+
+    tbH248CurrNbOfActiveFixTermCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current number of active fix termination."
+        ::= { tbH248 8 }
+
+    tbH248TotalNbOfActiveFixTermCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total number of active fix termination."
+        ::= { tbH248 9 }
+
+    tbH248CurrNbOfEphTermCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current number of ephemeral termination."
+        ::= { tbH248 10 }
+
+    tbH248TotalNbOfEphTermCreatedCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total number of ephemeral termination created."
+        ::= { tbH248 11 }
+
+    tbH248CurrNbOfActiveCntxCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current number of active contexts."
+        ::= { tbH248 12 }
+
+    tbH248TotalNbOfCntxCreatedCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total number of contexts created."
+        ::= { tbH248 13 }
+
+    tbH248Congestion OBJECT-TYPE
+        SYNTAX  INTEGER{
+                          no(0),
+                          yes(1)
+                       }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Indicates whether the H248 is congested or not."
+        ::= { tbH248 14 }
+
+
+    -- ================== --
+    -- tb.tbMedia.tbCalls --
+    -- ================== --
+    -- Calls --
+    tbCLegInCallCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Instantaneous count of incoming legs."
+        ::= { tbCalls 1 }
+
+    tbCLegInCallCntInProgess OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Instantaneous count of incoming in-progress legs (waiting to be answered)."
+        ::= { tbCalls 2 }
+
+    tbCLegInCallCntAnswered OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Instantaneous count of incoming answered legs."
+        ::= { tbCalls 3 }
+
+    tbCLegInCallCntTerminating OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Instantaneous count of incoming terminating legs."
+        ::= { tbCalls 4 }
+
+    tbCLegInCallRate OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current incoming legs rate (legs per second)."
+        ::= { tbCalls 5 }
+
+    tbCLegInCallRateHighest OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Highest incoming legs rate (legs per second)."
+        ::= { tbCalls 6 }
+
+    tbCLegInCallRateAnswered OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current incoming answered legs rate (legs per second)."
+        ::= { tbCalls 7 }
+
+    tbCLegInCallRateAnsweredHighest OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Highest incoming answered legs rate (legs per second)."
+        ::= { tbCalls 8 }
+
+    tbCLegInTotalCall OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total (cumulative) count of incoming legs."
+        ::= { tbCalls 9 }
+
+    tbCLegInTotalCallAnswered OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total (cumulative) count of incoming answered legs."
+        ::= { tbCalls 10 }
+
+    tbCLegOutCallCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Instantaneous count of outgoing legs."
+        ::= { tbCalls 11 }
+
+    tbCLegOutCallCntInProgess OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Instantaneous count of outgoing in-progress legs (waiting to be answered)."
+        ::= { tbCalls 12 }
+
+    tbCLegOutCallCntAnswered OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Instantaneous count of outgoing answered legs."
+        ::= { tbCalls 13 }
+
+    tbCLegOutCallCntTerminating OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Instantaneous count of outgoing terminating legs."
+        ::= { tbCalls 14 }
+
+    tbCLegOutCallRate OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current outgoing legs rate (legs per second)."
+        ::= { tbCalls 15 }
+
+    tbCLegOutCallRateHighest OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Highest outgoing legs rate (legs per second)."
+        ::= { tbCalls 16 }
+
+    tbCLegOutCallRateAnswered OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current outgoing answered legs rate (legs per second)."
+        ::= { tbCalls 17 }
+
+    tbCLegOutCallRateAnsweredHighest OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Highest outgoing answered legs rate (legs per second)."
+        ::= { tbCalls 18 }
+
+    tbCLegOutTotalCall OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total (cumulative) count of outgoing legs."
+        ::= { tbCalls 19 }
+
+    tbCLegOutTotalCallAnswered OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total (cumulative) count of outgoing answered legs."
+        ::= { tbCalls 20 }
+
+    tbCLegTotalCall OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total (cumulative) count of legs."
+        ::= { tbCalls 21 }
+
+    tbCLegTotalCallAnswered OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total (cumulative) count of answered legs."
+        ::= { tbCalls 22 }
+
+
+    -- ============================ --
+    -- tb.tbMedia.tbNAP.tbNapNumber --
+    -- ============================ --
+    -- NAP Number --
+    tbNapNumber OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "The number of NAPs present on this system."
+        ::= { tbNAP 1 }
+
+
+    -- =========================== --
+    -- tb.tbMedia.tbNAP.tbNapTable --
+    -- =========================== --
+    -- NAP Table --
+    tbNapTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF TBNapEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "Lists NAPs statistics information."
+        ::= { tbNAP 2 }
+
+    tbNapEntry OBJECT-TYPE
+        SYNTAX  TBNapEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A NAP table entry."
+        INDEX   { tbModuleIndex }
+        ::= { tbNapTable 1 }
+
+    TBNapEntry ::=
+        SEQUENCE {
+                   tbNapName                                 DisplayString,
+                   tbNapSignalingType                        INTEGER,
+                   tbNapInCallCnt                            Integer32,
+                   tbNapInCallCntInProgess                   Integer32,
+                   tbNapInCallCntAnswered                    Integer32,
+                   tbNapInCallCntTerminating                 Integer32,
+                   tbNapInCallRate                           Integer32,
+                   tbNapInCallRateHighest                    Integer32,
+                   tbNapInCallRateAnswered                   Integer32,
+                   tbNapInCallRateAnsweredHighest            Integer32,
+                   tbNapOutCallCnt                           Integer32,
+                   tbNapOutCallCntInProgess                  Integer32,
+                   tbNapOutCallCntAnswered                   Integer32,
+                   tbNapOutCallCntTerminating                Integer32,
+                   tbNapOutCallRate                          Integer32,
+                   tbNapOutCallRateHighest                   Integer32,
+                   tbNapOutCallRateAnswered                  Integer32,
+                   tbNapOutCallRateAnsweredHighest           Integer32,
+                   tbNapAvailablePercent                     Integer32,
+                   tbNapUsagePercent                         Integer32,
+                   tbNapAvailableCnt                         Integer32,
+                   tbNapUnavailableCnt                       Integer32,
+                   tbNapInAsrGlobalAsrPercent                Integer32,
+                   tbNapInAsrTotalCallCnt                    Integer32,
+                   tbNapInAsrTotalAnsweredCallCnt            Integer32,
+                   tbNapInAsrLast24hAsrPercent               Integer32,
+                   tbNapInAsrLast24hCallCnt                  Integer32,
+                   tbNapInAsrCurrentHourAsrPercent           Integer32,
+                   tbNapInAsrCurrentHourCallCnt              Integer32,
+                   tbNapInAsrLastHourAsrPercent              Integer32,
+                   tbNapInAsrLastHourCallCnt                 Integer32,
+                   tbNapOutAsrGlobalAsrPercent               Integer32,
+                   tbNapOutAsrTotalCallCnt                   Integer32,
+                   tbNapOutAsrTotalAnsweredCallCnt           Integer32,
+                   tbNapOutAsrLast24hAsrPercent              Integer32,
+                   tbNapOutAsrLast24hCallCnt                 Integer32,
+                   tbNapOutAsrCurrentHourAsrPercent          Integer32,
+                   tbNapOutAsrCurrentHourCallCnt             Integer32,
+                   tbNapOutAsrLastHourAsrPercent             Integer32,
+                   tbNapOutAsrLastHourCallCnt                Integer32,
+                   tbNapMediaOnlyCallCnt                     Integer32,
+                   tbNapMediaOnlyCallCntInProgress           Integer32,
+                   tbNapMediaOnlyCallCntAnswered             Integer32,
+                   tbNapMediaOnlyCallCntTerminating          Integer32,
+                   tbNapAvailabilityDetectionPollRemoteProxy INTEGER,
+                   tbNapAvailabilityDetectionAvailable       INTEGER,
+                   tbNapRegistrationRegisterToProxy          INTEGER,
+                   tbNapRegistrationRegistered               INTEGER
+                 }
+
+    tbNapName OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Name of this NAP."
+        ::= { tbNapEntry 1 }
+
+    tbNapSignalingType OBJECT-TYPE
+        SYNTAX  INTEGER{
+                         unknown(-1),
+                         isdn(1),
+                         ss7(2),
+                         sip(3),
+                         voipMedia(4),
+                         tdmMedia(5),
+                         casr2(6)
+                       }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current state of the NAP signaling type."
+        ::= { tbNapEntry 2 }
+
+    tbNapInCallCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Instantaneous count of incoming legs."
+        ::= { tbNapEntry 3 }
+
+    tbNapInCallCntInProgess OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Instantaneous count of incoming in-progress legs (waiting to be answered)."
+        ::= { tbNapEntry 4 }
+
+    tbNapInCallCntAnswered OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Instantaneous count of incoming answered legs."
+        ::= { tbNapEntry 5 }
+
+    tbNapInCallCntTerminating OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Instantaneous count of incoming terminating legs."
+        ::= { tbNapEntry 6 }
+
+    tbNapInCallRate OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current incoming legs rate (legs per second)."
+        ::= { tbNapEntry 7 }
+
+    tbNapInCallRateHighest OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Highest incoming legs rate (legs per second)."
+        ::= { tbNapEntry 8 }
+
+    tbNapInCallRateAnswered OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current incoming answered legs rate (legs per second)."
+        ::= { tbNapEntry 9 }
+
+    tbNapInCallRateAnsweredHighest OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Highest incoming answered legs rate (legs per second)."
+        ::= { tbNapEntry 10 }
+
+    tbNapOutCallCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Instantaneous count of outgoing legs."
+        ::= { tbNapEntry 11 }
+
+    tbNapOutCallCntInProgess OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Instantaneous count of outgoing in-progress legs (waiting to be answered)."
+        ::= { tbNapEntry 12 }
+
+    tbNapOutCallCntAnswered OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Instantaneous count of outgoing answered legs."
+        ::= { tbNapEntry 13 }
+
+    tbNapOutCallCntTerminating OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Instantaneous count of outgoing terminating legs."
+        ::= { tbNapEntry 14 }
+
+    tbNapOutCallRate OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current outgoing legs rate (legs per second)."
+        ::= { tbNapEntry 15 }
+
+    tbNapOutCallRateHighest OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Highest outgoing legs rate (legs per second)."
+        ::= { tbNapEntry 16 }
+
+    tbNapOutCallRateAnswered OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current outgoing answered legs rate (legs per second)."
+        ::= { tbNapEntry 17 }
+
+    tbNapOutCallRateAnsweredHighest OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Highest outgoing answered legs rate (legs per second)."
+        ::= { tbNapEntry 18 }
+
+    tbNapAvailablePercent OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Percentage of available circuits or channels."
+        ::= { tbNapEntry 19 }
+
+    tbNapUsagePercent OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Percentage of used circuits or channels."
+        ::= { tbNapEntry 20 }
+
+    tbNapAvailableCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of available circuits or channels."
+        ::= { tbNapEntry 21 }
+
+    tbNapUnavailableCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of unavailable circuits or channels."
+        ::= { tbNapEntry 22 }
+
+    tbNapInAsrGlobalAsrPercent OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Global calculated ASR percentage for incoming calls."
+        ::= { tbNapEntry 23 }
+
+    tbNapInAsrTotalCallCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total (cumulative) count of incoming calls."
+        ::= { tbNapEntry 24 }
+
+    tbNapInAsrTotalAnsweredCallCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total (cumulative) count of incoming answered calls."
+        ::= { tbNapEntry 25 }
+
+    tbNapInAsrLast24hAsrPercent OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Calculated ASR percentage over last 24 hours for incoming calls."
+        ::= { tbNapEntry 26 }
+
+    tbNapInAsrLast24hCallCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total (cumulative) count of incoming calls over the last 24 hours."
+        ::= { tbNapEntry 27 }
+
+    tbNapInAsrCurrentHourAsrPercent OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Calculated ASR percentage in the current hour for incoming calls."
+        ::= { tbNapEntry 28 }
+
+    tbNapInAsrCurrentHourCallCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total (cumulative) count of incoming calls in the current hour."
+        ::= { tbNapEntry 29 }
+
+    tbNapInAsrLastHourAsrPercent OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Calculated ASR percentage in the previous hour for incoming calls."
+        ::= { tbNapEntry 30 }
+
+    tbNapInAsrLastHourCallCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total (cumulative) count of incoming calls in the previous hour."
+        ::= { tbNapEntry 31 }
+
+    tbNapOutAsrGlobalAsrPercent OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Global calculated ASR percentage for outgoing calls."
+        ::= { tbNapEntry 32 }
+
+    tbNapOutAsrTotalCallCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total (cumulative) count of outgoing calls."
+        ::= { tbNapEntry 33 }
+
+    tbNapOutAsrTotalAnsweredCallCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total (cumulative) count of outgoing answered calls."
+        ::= { tbNapEntry 34 }
+
+    tbNapOutAsrLast24hAsrPercent OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Calculated ASR percentage over last 24 hours for outgoing calls."
+        ::= { tbNapEntry 35 }
+
+    tbNapOutAsrLast24hCallCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total (cumulative) count of outgoing calls over the last 24 hours."
+        ::= { tbNapEntry 36 }
+
+    tbNapOutAsrCurrentHourAsrPercent OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Calculated ASR percentage in the current hour for outgoing calls."
+        ::= { tbNapEntry 37 }
+
+    tbNapOutAsrCurrentHourCallCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total (cumulative) count of outgoing calls in the current hour."
+        ::= { tbNapEntry 38 }
+
+    tbNapOutAsrLastHourAsrPercent OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Calculated ASR percentage in the previous hour for outgoing calls."
+        ::= { tbNapEntry 39 }
+
+    tbNapOutAsrLastHourCallCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total (cumulative) count of outgoing calls in the previous hour."
+        ::= { tbNapEntry 40 }
+
+    tbNapMediaOnlyCallCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Instantaneous count of media only calls."
+        ::= { tbNapEntry 41 }
+
+    tbNapMediaOnlyCallCntInProgress OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Instantaneous count of media only in-progress calls (waiting for resources allocation)."
+        ::= { tbNapEntry 42 }
+
+    tbNapMediaOnlyCallCntAnswered OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Instantaneous count of media only active calls."
+        ::= { tbNapEntry 43 }
+
+    tbNapMediaOnlyCallCntTerminating OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Instantaneous count of media only terminating calls."
+        ::= { tbNapEntry 44 }
+
+    tbNapAvailabilityDetectionPollRemoteProxy OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          no(0),
+                          yes(1)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "NapAvailabilityDetectionPollRemoteProxy."
+        ::= { tbNapEntry 45 }
+
+    tbNapAvailabilityDetectionAvailable OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          no(0),
+                          yes(1)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Indicates if Nap Availability Detection is available."
+        ::= { tbNapEntry 46 }
+
+    tbNapRegistrationRegisterToProxy OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          no(0),
+                          yes(1)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Indicates if the functionality -Register To Proxy- in Nap Registration is available."
+        ::= { tbNapEntry 47 }
+
+    tbNapRegistrationRegistered OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          no(0),
+                          yes(1)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Indicates if the SIP registration is available."
+        ::= { tbNapEntry 48 }
+
+    -- ===================================== --
+    -- tb.tbMedia.tbHighAvailability.tbHaNp1 --
+    -- ===================================== --
+    -- High Availability Group (NP1) --
+    tbHaNp1 OBJECT IDENTIFIER  ::= { tbHighAvailability 1 }
+
+    -- =================================================== --
+    -- tb.tbMedia.tbHighAvailability.tbHaNp1.tbHaNp1Number --
+    -- =================================================== --
+    -- N+1 Number --
+    tbHaNp1Number OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "The number of N+1 group in the table."
+        ::= { tbHaNp1 1 }
+
+    -- ================================================== --
+    -- tb.tbMedia.tbHighAvailability.tbHaNp1.tbHaNp1Table --
+    -- ================================================== --
+    -- N+1 Table --
+    tbHaNp1Table OBJECT-TYPE
+        SYNTAX  SEQUENCE OF TBHANp1Entry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "Lists 1+1 and N+1 status information."
+        ::= { tbHaNp1 2 }
+
+    tbHaNp1Entry OBJECT-TYPE
+        SYNTAX  TBHANp1Entry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A N+1 group Table entry."
+        INDEX   { tbModuleIndex }
+        ::= { tbHaNp1Table 1 }
+
+    TBHANp1Entry ::=
+        SEQUENCE {
+                   tbHaNp1Name                 DisplayString,
+                   tbHaNp1FunctionalState      INTEGER,
+                   tbHaNp1ReplacedUnit         DisplayString,
+                   tbHaNp1PriPatchPanelReady   INTEGER,
+                   tbHaNp1SecPatchPanelReady   INTEGER,
+                   tbHaNp1ExcessiveSwitch      INTEGER
+                 }
+
+    tbHaNp1Name OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "The name of the N+1 group."
+        ::= { tbHaNp1Entry 1 }
+
+    tbHaNp1FunctionalState OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          unknown(-1),
+                          fault(0),
+                          unprotected(1),
+                          unprotectedSwitched(2),
+                          healthy(3),
+                          healthySwitched(4)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Indicates the current functional state of N+1 group.
+States:
+ fault = Backup adapter could not take over the fault
+ unprotected = Backup adapter not usable
+ unprotectedSwitched = Backup adapter active, primary being replaced not usable
+ healthy = Backup is standby, but usable
+ healthySwitched = Backup is active, replaced primary is standby, but usable"
+        ::= { tbHaNp1Entry 2 }
+
+    tbHaNp1ReplacedUnit OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Name of the unit currently replaced by the backup."
+        ::= { tbHaNp1Entry 3 }
+
+    tbHaNp1PriPatchPanelReady OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          no(0),
+                          yes(1)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Primary N+1 patch panel of the group is ready."
+        ::= { tbHaNp1Entry 4 }
+
+    tbHaNp1SecPatchPanelReady OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          no(0),
+                          yes(1)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Secondary N+1 patch panel of the group is ready."
+        ::= { tbHaNp1Entry 5 }
+
+    tbHaNp1ExcessiveSwitch OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          no(0),
+                          yes(1)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Too many switchovers happened, in which case the backup unit will remain active until manually rebooted."
+        ::= { tbHaNp1Entry 6 }
+
+    -- ===================================== --
+    -- tb.tbMedia.tbHighAvailability.tbHaApp --
+    -- ===================================== --
+    -- High Availability Group (APP) --
+    tbHaApp OBJECT IDENTIFIER  ::= { tbHighAvailability 2 }
+
+    -- =================================================== --
+    -- tb.tbMedia.tbHighAvailability.tbHaApp.tbHaAppNumber --
+    -- =================================================== --
+    -- APP Number --
+    tbHaAppNumber OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "The number of high availability applications in the table."
+        ::= { tbHaApp 1 }
+
+    -- ================================================== --
+    -- tb.tbMedia.tbHighAvailability.tbHaApp.tbHaAppTable --
+    -- ================================================== --
+    -- APP Table --
+    tbHaAppTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF TBHAAppEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "Lists high availability applications status information."
+        ::= { tbHaApp 2 }
+
+    tbHaAppEntry OBJECT-TYPE
+        SYNTAX  TBHAAppEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "An application table entry."
+        INDEX   { tbModuleIndex }
+        ::= { tbHaAppTable 1 }
+
+    TBHAAppEntry ::=
+        SEQUENCE {
+                   tbHaAppName                 DisplayString,
+                   tbHaAppCurrentState         INTEGER,
+                   tbHaAppHaCurrentState       INTEGER,
+                   tbHaAppHostName             DisplayString
+                 }
+
+    tbHaAppName OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "The name of the application."
+        ::= { tbHaAppEntry 1 }
+
+    tbHaAppCurrentState OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          unknown(100),
+                          notRunning(101),
+                          starting(102),
+                          ready(103),
+                          shuttingDown(104),
+                          goingManagement(105),
+                          fault(106)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current state of the application.
+States:
+ 100 = State of this application is unknown
+ 101 = This application is not currently running
+ 102 = This application is currently starting
+ 103 = This application is running, and is ready
+ 104 = This application is currently shutting down
+ 105 = This application is gracefully shutting down (trying not to loose calls)
+ 106 = Fault when trying to launch this application"
+        ::= { tbHaAppEntry 2 }
+
+    tbHaAppHaCurrentState OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          notPresent(0),
+                          active(1),
+                          standby(2)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current high availability state of the application.
+States:
+ 0 = This application is not running
+ 1 = This application is currently active
+ 2 = This application is currently standby"
+        ::= { tbHaAppEntry 3 }
+
+    tbHaAppHostName OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "The name of the host where application is located."
+        ::= { tbHaAppEntry 4 }
+
+    -- ================================ --
+    -- tb.tbMedia.tbClock.tbClockNumber --
+    -- ================================ --
+    -- Clock Number --
+    tbClockNumber OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "The number of clocks in the table."
+        ::= { tbClock 1 }
+
+    -- =============================== --
+    -- tb.tbMedia.tbClock.tbClockTable --
+    -- =============================== --
+    -- Clock Table --
+    tbClockTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF TBClockEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "Lists clock status information."
+        ::= { tbClock 2 }
+
+    tbClockEntry OBJECT-TYPE
+        SYNTAX  TBClockEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A clock table entry."
+        INDEX   { tbModuleIndex }
+        ::= { tbClockTable 1 }
+
+    TBClockEntry ::=
+        SEQUENCE {
+                   tbClockName                DisplayString,
+                   tbClockType                INTEGER,
+                   tbClockSource              DisplayString,
+                   tbClockGrade               INTEGER,
+                   tbClockActive              INTEGER,
+                   tbClockUnqualifiedReason   INTEGER
+                 }
+
+    tbClockName OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "The name of the reference clock."
+        ::= { tbClockEntry 1 }
+
+    tbClockType OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          none(1),
+                          osc(2),
+                          trunk(3),
+                          netRef1(4),
+                          netRef2(5),
+                          ptmc1(6),
+                          ptmc2(7),
+                          ct8a(8),
+                          ct8b(9),
+                          mbl(10),
+                          bits(11),
+                          ds3(12),
+                          sonetSdh(13),
+                          holdover(14)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Source type of the reference clock.
+Source types:
+ 1  = No clock source
+ 2  = Internal oscillator as clock source
+ 3  = Trunk as clock source
+ 4  = First network reference as clock source
+ 5  = Second network reference as clock source
+ 6  = Signal from the first PTMC card as clock source
+ 7  = Signal from the second PTMC card as clock source
+ 8  = CT8A signal from the H.110 bus as clock source
+ 9  = CT8B signal from the H.110 bus as clock source
+ 10 = Multi-Blade Link port as clock source
+ 11 = BITS port as clock source
+ 12 = DS3 port as clock source
+ 13 = SONET/SDH port as clock source
+ 14 = Holdover as clock source"
+        ::= { tbClockEntry 2 }
+
+    tbClockSource OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Clock reference source selection."
+        ::= { tbClockEntry 3 }
+
+    tbClockGrade OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          unqualified(0),
+                          beingQualified(1),
+                          qualified(2),
+                          qualifiedForRecovery(3)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Grade of the reference clock."
+        ::= { tbClockEntry 4 }
+
+    tbClockActive OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          no(0),
+                          yes(1)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Indicates if the reference Clock is active."
+        ::= { tbClockEntry 5 }
+
+    tbClockUnqualifiedReason OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          none(0),
+                          adapterNotFound(1),
+                          alarmDetected(2),
+                          trunkNotFound(3),
+                          trunkLosDetects(4),
+                          trunkOofDetects(5),
+                          trunkFecAnomalies(6),
+                          trunkCvcAnomalies(7)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Unqualified reason of the reference clock."
+        ::= { tbClockEntry 6 }
+
+
+    -- ======================================================== --
+    -- tb.tbMedia.tbLineServicesUsage.tbLineServicesUsageNumber --
+    -- ======================================================== --
+    -- Line Services Usage Number --
+    tbLineServicesUsageNumber OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "The number of line services usage in the table."
+        ::= { tbLineServicesUsage 1 }
+
+    -- ======================================================= --
+    -- tb.tbMedia.tbLineServicesUsage.tbLineServicesUsageTable --
+    -- ======================================================= --
+    -- Line Services Usage Table --
+    tbLineServicesUsageTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF TBLineServicesUsageEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "Lists line services usage status information."
+        ::= { tbLineServicesUsage 2 }
+
+    tbLineServicesUsageEntry OBJECT-TYPE
+        SYNTAX  TBLineServicesUsageEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A line service usage table entry."
+        INDEX   { tbModuleIndex }
+        ::= { tbLineServicesUsageTable 1 }
+
+    TBLineServicesUsageEntry ::=
+        SEQUENCE {
+                   tbLSULineServiceName          DisplayString,
+                   tbLSUInTotalCall              Integer32,
+                   tbLSUInTotalCallAnswered      Integer32,
+                   tbLSUOutTotalCall             Integer32,
+                   tbLSUOutTotalCallAnswered     Integer32,
+                   tbLSUMediaOnlyTotalCall       Integer32,
+                   tbLSUIdle                     Integer32,
+                   tbLSUInProgress               Integer32,
+                   tbLSUAccepted                 Integer32,
+                   tbLSUAlerted                  Integer32,
+                   tbLSUAnswered                 Integer32,
+                   tbLSUTerminating              Integer32,
+                   tbLSUMediaOnlyUsed            Integer32,
+                   tbLSUTsMaskStateIdle          Unsigned32,
+                   tbLSUTsMaskStateInProgress    Unsigned32,
+                   tbLSUTsMaskStateAccepted      Unsigned32,
+                   tbLSUTsMaskStateAlerted       Unsigned32,
+                   tbLSUTsMaskStateAnswered      Unsigned32,
+                   tbLSUTsMaskStateTerminating   Unsigned32,
+                   tbLSUTsMaskStateMediaOnlyUsed Unsigned32
+                 }
+
+    tbLSULineServiceName OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "The name of the line service."
+        ::= { tbLineServicesUsageEntry 1 }
+
+    tbLSUInTotalCall OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total (cumulative) count of incoming legs."
+        ::= { tbLineServicesUsageEntry 2 }
+
+    tbLSUInTotalCallAnswered OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total (cumulative) count of incoming answered legs."
+        ::= { tbLineServicesUsageEntry 3 }
+
+    tbLSUOutTotalCall OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total (cumulative) count of outgoing legs."
+        ::= { tbLineServicesUsageEntry 4 }
+
+    tbLSUOutTotalCallAnswered OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total (cumulative) count of outgoing answered legs."
+        ::= { tbLineServicesUsageEntry 5 }
+
+    tbLSUMediaOnlyTotalCall OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Total (cumulative) count of media-only call legs."
+        ::= { tbLineServicesUsageEntry 6 }
+
+    tbLSUIdle OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Instantaneous count of timeslots in 'idle' state."
+        ::= { tbLineServicesUsageEntry 7 }
+
+    tbLSUInProgress OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Instantaneous count of timeslots in 'in progress' state."
+        ::= { tbLineServicesUsageEntry 8 }
+
+    tbLSUAccepted OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Instantaneous count of timeslots in 'accepted' state."
+        ::= { tbLineServicesUsageEntry 9 }
+
+    tbLSUAlerted OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Instantaneous count of timeslots in 'alerted' state."
+        ::= { tbLineServicesUsageEntry 10 }
+
+    tbLSUAnswered OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Instantaneous count of timeslots in 'answered' state."
+        ::= { tbLineServicesUsageEntry 11 }
+
+    tbLSUTerminating OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Instantaneous count of timeslots in 'terminating' state."
+        ::= { tbLineServicesUsageEntry 12 }
+
+    tbLSUMediaOnlyUsed OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Instantaneous count of media-only timeslots in use (with calls)."
+        ::= { tbLineServicesUsageEntry 13 }
+
+    tbLSUTsMaskStateIdle OBJECT-TYPE
+        SYNTAX  Unsigned32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "A mask that indicates which timeslot are in 'idle' state.
+A bit set to value '1' indicates that the timeslot is in 'idle' state.
+Each bit represents a timeslot of the line service.
+Bit0 is never used.
+Bit1 = timeslot1
+Bit2 = timeslot2
+...
+Bit31 = timeslot31"
+        ::= { tbLineServicesUsageEntry 14 }
+
+    tbLSUTsMaskStateInProgress OBJECT-TYPE
+        SYNTAX  Unsigned32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "A mask that indicates which timeslot are in 'in progress' state.
+A bit set to value '1' indicates that the timeslot is in 'in progress' state.
+Each bit represents a timeslot of the line service.
+Bit0 is never used.
+Bit1 = timeslot1
+Bit2 = timeslot2
+...
+Bit31 = timeslot31"
+        ::= { tbLineServicesUsageEntry 15 }
+
+    tbLSUTsMaskStateAccepted OBJECT-TYPE
+        SYNTAX  Unsigned32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "A mask that indicates which timeslot are in 'accepted' state.
+A bit set to value '1' indicates that the timeslot is in 'accepted' state.
+Each bit represents a timeslot of the line service.
+Bit0 is never used.
+Bit1 = timeslot1
+Bit2 = timeslot2
+...
+Bit31 = timeslot31"
+        ::= { tbLineServicesUsageEntry 16 }
+
+    tbLSUTsMaskStateAlerted OBJECT-TYPE
+        SYNTAX  Unsigned32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "A mask that indicates which timeslot are in 'alerted' state.
+A bit set to value '1' indicates that the timeslot is in 'alerted' state.
+Each bit represents a timeslot of the line service.
+Bit0 is never used.
+Bit1 = timeslot1
+Bit2 = timeslot2
+...
+Bit31 = timeslot31"
+        ::= { tbLineServicesUsageEntry 17 }
+
+    tbLSUTsMaskStateAnswered OBJECT-TYPE
+        SYNTAX  Unsigned32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "A mask that indicates which timeslot are in 'answered' state.
+A bit set to value '1' indicates that the timeslot is in 'answered' state.
+Each bit represents a timeslot of the line service.
+Bit0 is never used.
+Bit1 = timeslot1
+Bit2 = timeslot2
+...
+Bit31 = timeslot31"
+        ::= { tbLineServicesUsageEntry 18 }
+
+    tbLSUTsMaskStateTerminating OBJECT-TYPE
+        SYNTAX  Unsigned32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "A mask that indicates which timeslot are in 'terminating' state.
+A bit set to value '1' indicates that the timeslot is in 'terminating' state.
+Each bit represents a timeslot of the line service.
+Bit0 is never used.
+Bit1 = timeslot1
+Bit2 = timeslot2
+...
+Bit31 = timeslot31"
+        ::= { tbLineServicesUsageEntry 19 }
+
+    tbLSUTsMaskStateMediaOnlyUsed OBJECT-TYPE
+        SYNTAX  Unsigned32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "A mask that indicates which timeslot are used by 'media-only' calls.
+A bit set to value '1' indicates that the timeslot is in use by a 'media-only' call.
+Each bit represents a timeslot of the line service.
+Bit0 is never used.
+Bit1 = timeslot1
+Bit2 = timeslot2
+...
+Bit31 = timeslot31"
+        ::= { tbLineServicesUsageEntry 20 }
+
+
+    -- ================= --
+    -- tb.tbMedia.tbHost --
+    -- ================= --
+    -- tbHost Group --
+
+    -- ============================== --
+    -- tb.tbMedia.tbHost.tbHostNumber --
+    -- ============================== --
+    -- Host Number --
+    tbHostNumber OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "The number of hosts present on this system."
+        ::= { tbHost 1 }
+
+    -- ============================= --
+    -- tb.tbMedia.tbHost.tbHostTable --
+    -- ============================= --
+    -- Host Table --
+    tbHostTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF TbHostEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "Lists Hosts statistics information."
+        ::= { tbHost 2 }
+
+    tbHostEntry OBJECT-TYPE
+        SYNTAX  TbHostEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A Host table entry."
+        INDEX   { tbModuleIndex }
+        ::= { tbHostTable 1 }
+        
+    TbHostEntry ::=
+        SEQUENCE {
+                   tbHostName                           DisplayString,
+                   tbHostState                          INTEGER,
+                   tbHostUpdateAvailable                INTEGER,
+                   tbHostOamMode                        INTEGER,
+                   tbHostRole                           INTEGER,
+                   tbHostOamState                       INTEGER,
+                   tbHostPackage                        DisplayString,
+                   tbHostMemoryUsedPercentage           Integer32,
+                   tbHostSwapUsedPercentage             Integer32,
+                   tbHostDiskFull                       INTEGER,
+                   tbHostCpuUsedPercentage              Integer32,
+                   tbHostToolpackVersion                DisplayString,
+                   tbHostActiveConfiguration            DisplayString,
+                   tbHostComponentCurrentlyUpdating     DisplayString
+                 }
+
+    tbHostName OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Name of this Host."
+        ::= { tbHostEntry 1 }
+
+    tbHostState OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          up(1),
+                          down(2)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current state of this host."
+        ::= { tbHostEntry 2 }
+
+    tbHostUpdateAvailable OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          false(0),
+                          true(1),
+                          notSupported(2),
+                          unknown(3),
+                          disabled(4)
+                         }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Indication that host operating system update is available"
+        ::= { tbHostEntry 3 }
+
+     tbHostOamMode OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          master(0),
+                          slave(1)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "There's only 1 master in a toolpack system at a given time. Any hosts can become master if necessary. The master controls Toolpack, the database and various states."
+        ::= { tbHostEntry 4 }
+
+    tbHostRole OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          unknown(0),
+                          primary(1),
+                          secondary(2),
+                          standalone(3)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "HA role of this host."
+        ::= { tbHostEntry 5 }
+
+    tbHostOamState OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          starting(0),
+                          readingConfigFiles(1),
+                          initializingLibraries(2),
+                          validatingHostConfiguration(3),
+                          connectingDatabase(4),
+                          creatingDatabase(5),
+                          updatingDatabase(6),
+                          loadingDatabase(7),
+                          startingServices(8),
+                          applyingInitialConfiguration(9),
+                          switchingNewConfiguration(100),
+                          switchingNewPackage(101),
+                          ready(102),
+                          quitting(200)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "State of this application."
+        ::= { tbHostEntry 6 }
+
+    tbHostPackage OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Package currently running on this Host."
+        ::= { tbHostEntry 7 }
+
+    tbHostMemoryUsedPercentage OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Percentage of memory (non-swap) used."
+        ::= { tbHostEntry 8 }
+
+    tbHostSwapUsedPercentage OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Percentage of memory swap used."
+        ::= { tbHostEntry 9 }
+
+    tbHostDiskFull OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          no(0),
+                          yes(1)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "If any disk partions is full, this will be set as yes."
+        ::= { tbHostEntry 10}
+
+    tbHostCpuUsedPercentage OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Percentage of CPU used on this host."
+        ::= { tbHostEntry 11}
+
+    tbHostToolpackVersion OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Toolpack package version currently in use on this host."
+        ::= { tbHostEntry 12}
+
+    tbHostActiveConfiguration OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Configuration currently in use on this host."
+        ::= { tbHostEntry 13}
+  
+    tbHostComponentCurrentlyUpdating OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Component Currently updating."
+        ::= { tbHostEntry 14}
+
+
+
+    -- ================= --
+    -- tb.tbMedia.tbHostFeature --
+    -- ================= --
+    -- tbHostFeature Group --
+
+    -- ============================== --
+    -- tb.tbMedia.tbHostFeature.tbHostFeatureNumber --
+    -- ============================== --
+    -- Host feature Number --
+    tbHostFeatureNumber OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "The number of host features present on this system."
+        ::= { tbHostFeature 1 }
+
+    -- ============================= --
+    -- tb.tbMedia.tbHostFeature.tbHostFeatureTable --
+    -- ============================= --
+    -- Host Feature Table --    
+     
+    tbHostFeatureTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF TBHostFeatureEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "Lists Hosts feature statistics information."
+        ::= { tbHostFeature 2 }
+
+    tbHostFeatureEntry OBJECT-TYPE
+        SYNTAX  TBHostFeatureEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A Host feature table entry."
+        INDEX   { tbModuleIndex }
+        ::= { tbHostFeatureTable 1 }
+        
+    TBHostFeatureEntry ::=
+        SEQUENCE {
+                   tbHostFeatureType                 DisplayString,
+                   tbHostFeatureExpired              INTEGER,
+                   tbHostFeatureAboutToExpire        INTEGER,
+                   tbHostFeatureExpireDate           DisplayString,
+                   tbHostFeatureExpireTime           Integer32,
+                   tbHostFeatureEffectiveFeatureCnt  Integer32
+                 }
+                 
+    tbHostFeatureType OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Name of the application."
+        ::= { tbHostFeatureEntry 1}   
+                                  
+    tbHostFeatureExpired OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          false(0),
+                          true(1)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Expired"
+        ::= { tbHostFeatureEntry 2}   
+                                  
+    tbHostFeatureAboutToExpire OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          false(0),
+                          true(1)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "About to expire"
+        ::= { tbHostFeatureEntry 3}          
+                                  
+    tbHostFeatureExpireDate OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Expire date of the feature."
+        ::= { tbHostFeatureEntry 4}             
+                                  
+    tbHostFeatureExpireTime OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Expire time"
+        ::= { tbHostFeatureEntry 5}            
+                                  
+    tbHostFeatureEffectiveFeatureCnt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Effective feature count"
+        ::= { tbHostFeatureEntry 6}
+        
+        
+    -- ================= --
+    -- tb.tbMedia.tbHostFirewall --
+    -- ================= --
+    -- tbHostFirewall Group --
+
+    -- ============================== --
+    -- tb.tbMedia.tbHostFirewall.tbHostFirewallNumber --
+    -- ============================== --
+    -- Host Firewall Number --
+    tbHostFirewallNumber OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "The number of hosts with firewall active present on this system."
+        ::= { tbHostFirewall 1 }
+
+    -- ============================= --
+    -- tb.tbMedia.tbHostFirewall.tbHostFirewallTable --
+    -- ============================= --
+    -- Host Firewall Table --
+    tbHostFirewallTable OBJECT-TYPE
+        SYNTAX  SEQUENCE OF TbHostFirewallEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "Lists Firewalls statistics information."
+        ::= { tbHostFirewall 2 }
+
+    tbHostFirewallEntry OBJECT-TYPE
+        SYNTAX  TbHostFirewallEntry
+        MAX-ACCESS  not-accessible
+        STATUS  current
+        DESCRIPTION
+            "A Host Firewall table entry."
+        INDEX   { tbModuleIndex }
+        ::= { tbHostFirewallTable 1 }
+        
+    TbHostFirewallEntry ::=
+        SEQUENCE {
+                   tbHostFirewallName                       DisplayString,
+                   tbHostFirewallState                      INTEGER,
+                   tbHostFirewallSafeMode                   INTEGER,
+                   tbHostFirewallSchedulingProblem          INTEGER,
+                   tbHostFirewallDDOS                       INTEGER,
+                   tbHostFirewallThresholdPassed            INTEGER,
+                   tbHostFirewallHighCpu                    INTEGER,
+                   tbHostFirewallStatDropEntryPct           Integer32,
+                   tbHostFirewallStatAcceptEntryPct         Integer32,
+                   tbHostFirewallStatFragmentEntryPct       Integer32,
+                   tbHostFirewallStatRtpEntryPct            Integer32,
+                   tbHostFirewallStatUnkVlan                Integer32,
+                   tbHostFirewallStatUnkInterface           Integer32,
+                   tbHostFirewallStatRxByte                 Integer32,
+                   tbHostFirewallStatRxAcceptedByte         Integer32,
+                   tbHostFirewallStatTxByte                 Integer32,
+                   tbHostFirewallStatRxKbPerSec             Integer32,
+                   tbHostFirewallStatRxAccKbPerSec          Integer32,
+                   tbHostFirewallStatTxKbPerSec             Integer32,
+                   tbHostFirewallStatRxPeakKbPerSec         Integer32,
+                   tbHostFirewallStatRxAccPeakKbPerSec      Integer32,
+                   tbHostFirewallStatTxPeakKbPerSec         Integer32,
+                   tbHostFirewallStatRxPkt                  Integer32,
+                   tbHostFirewallStatRxAccPkt               Integer32,
+                   tbHostFirewallStatTxPkt                  Integer32,
+                   tbHostFirewallStatRxPktPerSec            Integer32,
+                   tbHostFirewallStatRxAccPktPerSec         Integer32,
+                   tbHostFirewallStatTxPktPerSec            Integer32,
+                   tbHostFirewallStatRxPeakPktPerSec        Integer32,
+                   tbHostFirewallStatRxAccPeakPktPerSec     Integer32,
+                   tbHostFirewallStatTxPeakPktPerSec        Integer32,
+                   tbHostFirewallStatRxArpPkt               Integer32,
+                   tbHostFirewallStatRxArpPktPerSec         Integer32,
+                   tbHostFirewallStatRxArpPeakPktPerSec     Integer32,
+                   tbHostFirewallStatRxDhcpPkt              Integer32,
+                   tbHostFirewallStatRxDhcpPktPerSec        Integer32,
+                   tbHostFirewallStatRxDhcpPeakPktPerSec    Integer32,
+                   tbHostFirewallStatRxIcmpPkt              Integer32,
+                   tbHostFirewallStatRxIcmpPktPerSec        Integer32,
+                   tbHostFirewallStatRxIcmpPeakPktPerSec    Integer32,
+                   tbHostFirewallStatRxL2BroadcastPkt       Integer32,
+                   tbHostFirewallStatRxL2UnsupportedPkt     Integer32,
+                   tbHostFirewallStatRxMulticastIpPkt       Integer32,
+                   tbHostFirewallStatRxIpFragments          Integer32,
+                   tbHostFirewallStatRxDroppedIpFragments   Integer32,
+                   tbHostFirewallStatRxInvalidIpv4Size      Integer32,
+                   tbHostFirewallStatRtpRxPkt               Integer32,
+                   tbHostFirewallStatRtpTxPkt               Integer32,
+                   tbHostFirewallStatRtpRxVoicePkt          Integer32,
+                   tbHostFirewallStatRtpTxVoicePkt          Integer32,
+                   tbHostFirewallStatRtpRxTelephonyEventPkt Integer32,
+                   tbHostFirewallStatRtpTxTelephonyEventPkt Integer32,
+                   tbHostFirewallStatRtpRxNsePkt            Integer32,
+                   tbHostFirewallStatRtpTxNsePkt            Integer32,
+                   tbHostFirewallStatRtpRxComfortNoisePkt   Integer32,
+                   tbHostFirewallStatRtpTxComfortNoisePkt   Integer32,
+                   tbHostFirewallStatRtpRxPayloadTypeChange Integer32,
+                   tbHostFirewallStatRtpRxSsrcChange        Integer32,
+                   tbHostFirewallStatRtpRxSeqError          Integer32,
+                   tbHostFirewallStatRtpRxBadPkt            Integer32,
+                   tbHostFirewallStatRtcpRxPkt              Integer32,
+                   tbHostFirewallStatRtcpRxLostPkt          Integer32,
+                   tbHostFirewallStatRtcpRxBadPkt           Integer32,
+                   tbHostFirewallStatRtcpTxPkt              Integer32,
+                   tbHostFirewallStatUdptlRxPkt             Integer32,
+                   tbHostFirewallStatUdptlSeqError          Integer32,
+                   tbHostFirewallStatUdptlBadPkt            Integer32,
+                   tbHostFirewallStatUdptlTxPkt             Integer32
+                 }
+
+    tbHostFirewallName OBJECT-TYPE
+        SYNTAX  DisplayString
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Name of this Host."
+        ::= { tbHostFirewallEntry 1 }
+
+    tbHostFirewallState OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          invalid(0),
+                          on(1),
+                          offWithStats(2),
+                          off(3)
+                        }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current state of the firewall on this host."
+        ::= { tbHostFirewallEntry 2 }
+
+    tbHostFirewallSafeMode OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          false(0),
+                          true(1)
+                         }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "SBC is running in safe mode due to a failure to start normally. Packets are not filtered in this mode."
+        ::= { tbHostFirewallEntry 3 }
+
+    tbHostFirewallSchedulingProblem OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          false(0),
+                          true(1)
+                         }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "SBC's packet processing cores has detected scheduling problems in the last 60 seconds. Please contact support team to fix your host/VM configuration."
+        ::= { tbHostFirewallEntry 4 }
+
+    tbHostFirewallDDOS OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          false(0),
+                          true(1)
+                         }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Suspected DDOS attack: Accepted or dropped connections list is full. This could indicate a DDOS attack, or that size of accepted/dropped connections lists (ACL) must be increased."
+        ::= { tbHostFirewallEntry 5 }
+
+    tbHostFirewallThresholdPassed OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          false(0),
+                          true(1)
+                         }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "One or more ACL entry has exceeded a bandwidth threshold (too many packets or bytes per second)"
+        ::= { tbHostFirewallEntry 6 }
+
+    tbHostFirewallHighCpu OBJECT-TYPE
+        SYNTAX  INTEGER {
+                          false(0),
+                          true(1)
+                         }
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "SBC processing CPU cores are currently considered in high load"
+        ::= { tbHostFirewallEntry 7 }
+
+    tbHostFirewallStatDropEntryPct OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current percent ratio between number of 'drop' ACL entries and maximum allowed"
+        ::= { tbHostFirewallEntry 8 }
+
+    tbHostFirewallStatAcceptEntryPct OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current percent ratio between number of 'accept' ACL entries and maximum allowed"
+        ::= { tbHostFirewallEntry 9 }
+
+    tbHostFirewallStatFragmentEntryPct OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current percent ratio between number of IP fragmented packets contexts and maximum allowed"
+        ::= { tbHostFirewallEntry 10 }
+
+    tbHostFirewallStatRtpEntryPct OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Current percent ratio between number of RTP ACL entries and maximum allowed"
+        ::= { tbHostFirewallEntry 11 }
+
+    tbHostFirewallStatUnkVlan OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of packets received with an unexpected VLAN id"
+        ::= { tbHostFirewallEntry 12 }
+
+    tbHostFirewallStatUnkInterface OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of IP packets received with an unexpected destination IP address"
+        ::= { tbHostFirewallEntry 13 }
+
+    tbHostFirewallStatRxByte OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of received bytes"
+        ::= { tbHostFirewallEntry 14 }
+
+    tbHostFirewallStatRxAcceptedByte OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of received bytes accepted by firewall filters"
+        ::= { tbHostFirewallEntry 15 }
+
+    tbHostFirewallStatTxByte OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of transmitted bytes"
+        ::= { tbHostFirewallEntry 16 }
+
+    tbHostFirewallStatRxKbPerSec OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Received bandwidth (kilobits per second)"
+        ::= { tbHostFirewallEntry 17 }
+
+    tbHostFirewallStatRxAccKbPerSec OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Received bandwidth (kilobits per second) accepted by firewall filters"
+        ::= { tbHostFirewallEntry 18 }
+
+    tbHostFirewallStatTxKbPerSec OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Transmitted bandwidth (kilobits per second)"
+        ::= { tbHostFirewallEntry 19 }
+
+    tbHostFirewallStatRxPeakKbPerSec OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Peak received bandwidth (kilobits per second)"
+        ::= { tbHostFirewallEntry 20 }
+
+    tbHostFirewallStatRxAccPeakKbPerSec OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Peak received bandwidth (kilobits per second) accepted by firewall filters"
+        ::= { tbHostFirewallEntry 21 }
+
+    tbHostFirewallStatTxPeakKbPerSec OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Peak transmitted bandwidth (kilobits per second)"
+        ::= { tbHostFirewallEntry 22 }
+
+    tbHostFirewallStatRxPkt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of received packets"
+        ::= { tbHostFirewallEntry 23 }
+        
+    tbHostFirewallStatRxAccPkt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of received packets accepted by firewall filters"
+        ::= { tbHostFirewallEntry 24 }
+
+    tbHostFirewallStatTxPkt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of transmitted packets"
+        ::= { tbHostFirewallEntry 25 }
+
+    tbHostFirewallStatRxPktPerSec OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of received packets per second"
+        ::= { tbHostFirewallEntry 26 }
+
+    tbHostFirewallStatRxAccPktPerSec OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of received packets per second accepted by firewall filters"
+        ::= { tbHostFirewallEntry 27 }
+
+    tbHostFirewallStatTxPktPerSec OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of transmitted packets per second"
+        ::= { tbHostFirewallEntry 28 }
+
+    tbHostFirewallStatRxPeakPktPerSec OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Peak number of received packets per second"
+        ::= { tbHostFirewallEntry 29 }
+
+    tbHostFirewallStatRxAccPeakPktPerSec OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Peak number of received packets per second accepted by firewall filters"
+        ::= { tbHostFirewallEntry 30 }
+
+    tbHostFirewallStatTxPeakPktPerSec OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Peak number of transmitted packets per second"
+        ::= { tbHostFirewallEntry 31 }
+
+    tbHostFirewallStatRxArpPkt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of received ARP packets"
+        ::= { tbHostFirewallEntry 32 }
+
+    tbHostFirewallStatRxArpPktPerSec OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Received ARP packets per second"
+        ::= { tbHostFirewallEntry 33 }
+
+    tbHostFirewallStatRxArpPeakPktPerSec OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Peak received ARP packets per second"
+        ::= { tbHostFirewallEntry 34 }
+
+    tbHostFirewallStatRxDhcpPkt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of received DHCP packets"
+        ::= { tbHostFirewallEntry 35 }
+
+    tbHostFirewallStatRxDhcpPktPerSec OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Received DHCP packets per second"
+        ::= { tbHostFirewallEntry 36 }
+
+    tbHostFirewallStatRxDhcpPeakPktPerSec OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Peak received DHCP packets per second"
+        ::= { tbHostFirewallEntry 37 }
+
+    tbHostFirewallStatRxIcmpPkt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of received ICMP packets"
+        ::= { tbHostFirewallEntry 38 }
+
+    tbHostFirewallStatRxIcmpPktPerSec OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Received ICMP packets per second"
+        ::= { tbHostFirewallEntry 39 }
+
+    tbHostFirewallStatRxIcmpPeakPktPerSec OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Peak received ICMP packets per second"
+        ::= { tbHostFirewallEntry 40 }
+
+    tbHostFirewallStatRxL2BroadcastPkt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of layer 2 broadcast packets dropped"
+        ::= { tbHostFirewallEntry 41 }
+
+    tbHostFirewallStatRxL2UnsupportedPkt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of layer 2 non IPv4 packets dropped"
+        ::= { tbHostFirewallEntry 42 }
+
+    tbHostFirewallStatRxMulticastIpPkt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of layer 2 multicast packets dropped"
+        ::= { tbHostFirewallEntry 43 }
+
+    tbHostFirewallStatRxIpFragments OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of received ip fragmented packets"
+        ::= { tbHostFirewallEntry 44 }
+
+    tbHostFirewallStatRxDroppedIpFragments OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of fragmented ip packets dropped"
+        ::= { tbHostFirewallEntry 45 }
+
+    tbHostFirewallStatRxInvalidIpv4Size OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Number of packets dropped because size in ipv4 header is invalid"
+        ::= { tbHostFirewallEntry 46 }
+
+    tbHostFirewallStatRtpRxPkt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Cumulative number of RTP packets received"
+        ::= { tbHostFirewallEntry 47 }
+
+    tbHostFirewallStatRtpTxPkt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Cumulative number of RTP packets sent"
+        ::= { tbHostFirewallEntry 48 }
+
+    tbHostFirewallStatRtpRxVoicePkt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Cumulative number of RTP packets received containing voice data(any codec)"
+        ::= { tbHostFirewallEntry 49 }
+
+    tbHostFirewallStatRtpTxVoicePkt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Cumulative number of RTP packets sent containing voice data (any codec)"
+        ::= { tbHostFirewallEntry 50 }
+
+    tbHostFirewallStatRtpRxTelephonyEventPkt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Cumulative number of RTP packets received that match the Telephony-event (RFC2833)"
+        ::= { tbHostFirewallEntry 51 }
+
+    tbHostFirewallStatRtpTxTelephonyEventPkt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Cumulative number of RTP packets sent with the Telephony-event (RFC2833) payload type"
+        ::= { tbHostFirewallEntry 52 }
+
+    tbHostFirewallStatRtpRxNsePkt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Cumulative number of RTP packets received that match the NSE payload type"
+        ::= { tbHostFirewallEntry 53 }
+
+    tbHostFirewallStatRtpTxNsePkt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Cumulative number of RTP packets sent with the NSE payload type"
+        ::= { tbHostFirewallEntry 54 }
+
+    tbHostFirewallStatRtpRxComfortNoisePkt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Cumulative number of RTP packets received that match the comfort-noise payload type"
+        ::= { tbHostFirewallEntry 55 }
+
+    tbHostFirewallStatRtpTxComfortNoisePkt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Cumulative number of RTP packets sent with the comfort-noise payload type"
+        ::= { tbHostFirewallEntry 56 }
+
+    tbHostFirewallStatRtpRxPayloadTypeChange OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Cumulative number of payload type change for audio RTP"
+        ::= { tbHostFirewallEntry 57 }
+
+    tbHostFirewallStatRtpRxSsrcChange OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Cumulative number of detected SSRC changes in audio RTP received packets"
+        ::= { tbHostFirewallEntry 58 }
+
+    tbHostFirewallStatRtpRxSeqError OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Cumulative number of RTP sequence errors detected in received packets"
+        ::= { tbHostFirewallEntry 59 }
+
+    tbHostFirewallStatRtpRxBadPkt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Cumulative number of RTP packets dropped due to bad protocol header detected"
+        ::= { tbHostFirewallEntry 60 }
+
+    tbHostFirewallStatRtcpRxPkt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Cumulative number of RTCP packets received"
+        ::= { tbHostFirewallEntry 61 }
+
+    tbHostFirewallStatRtcpRxLostPkt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Cumulative number of lost packets as reported in the RTCP SR or RR packet"
+        ::= { tbHostFirewallEntry 62 }
+
+    tbHostFirewallStatRtcpRxBadPkt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Cumulative number of RTCP packets dropped due to bad protocol header detected"
+        ::= { tbHostFirewallEntry 63 }
+
+    tbHostFirewallStatRtcpTxPkt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Cumulative number of RTCP packets sent"
+        ::= { tbHostFirewallEntry 64 }
+
+    tbHostFirewallStatUdptlRxPkt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Cumulative number of UDPTL packets received"
+        ::= { tbHostFirewallEntry 65 }
+
+    tbHostFirewallStatUdptlSeqError OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Cumulative number of sequence errors detected in received UDPTL packets"
+        ::= { tbHostFirewallEntry 66 }
+
+    tbHostFirewallStatUdptlBadPkt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Cumulative number of UDPTL packets dropped due to bad protocol header detected"
+        ::= { tbHostFirewallEntry 67 }
+
+    tbHostFirewallStatUdptlTxPkt OBJECT-TYPE
+        SYNTAX  Integer32
+        MAX-ACCESS  read-only
+        STATUS  current
+        DESCRIPTION
+            "Cumulative number of UDPTL (T.38) packets sent"
+        ::= { tbHostFirewallEntry 68 }
+            
+    -- ======================== --
+    -- tb.tbMedia.tbConformance --
+    -- ======================== --
+    -- Conformance Group                                   --
+    -- TB-MIB conformance statements                       --
+    -- Object groups for OIDs defined by TelcoBridges Inc. --
+    tbGroups              OBJECT IDENTIFIER   ::={tbConformance 1}
+    tbCompliance          OBJECT IDENTIFIER   ::={tbConformance 2}
+
+    tbModuleConformanceGroup OBJECT-GROUP
+        OBJECTS             {
+                              tbModuleID,
+                              tbModuleDescription
+                            }
+        STATUS current
+        DESCRIPTION
+            "Elements required for conformance with the tbModuleTable of the TelcoBridges private MIB."
+    ::= { tbGroups 1 }
+    tbMIBObjectsConformanceGroup NOTIFICATION-GROUP
+        NOTIFICATIONS       {
+                              tbNapAvailability,
+                              tbPwrSupplyState,
+                              tbNp1State,
+                              tbAppState,
+                              tbAppHaState,
+                              tbClkGradeState,
+                              tbClkActiveState,
+                              tbIsdnDChannelState,
+                              tbCASPhysicalLineState,
+                              tbSipState,
+                              tbH248MgcState,
+                              tbHostUpdateAvailableState,
+                              tbHostFirewallDdosState
+                            }
+        STATUS current
+        DESCRIPTION
+            "Elements required for conformance with the tbMIBObjects of the TelcoBridges private MIB."
+    ::= { tbGroups 2 }
+    tbHwConformanceGroup OBJECT-GROUP
+        OBJECTS {
+                  tbHwSerialNumber,
+                  tbHwShelfID,
+                  tbHwSlotID,
+                  tbHwPartNumber,
+                  tbHwDescription,
+                  tbHwVersionNum,
+                  tbHwDeviceDescription,
+                  tbHwTemperature,
+                  tbHwPowerSupplyNumber,
+                  tbHwPwrSupplyName,
+                  tbHwPwrSupplyStatus,
+                  tbHwFanNumber,
+                  tbHwFanName,
+                  tbHwFanCurrentSpeed
+                }
+        STATUS current
+        DESCRIPTION
+            "Elements required for conformance with TelcoBridges hardware tables."
+    ::= { tbGroups 3 }
+    tbFeatureConformanceGroup OBJECT-GROUP
+        OBJECTS {
+                  tbFeatureDescription,
+                  tbFeatureLicensed,
+                  tbFeatureMax
+                }
+        STATUS current
+        DESCRIPTION
+            "Elements required for conformance with TelcoBridges feature tables."
+    ::= { tbGroups 4 }
+    tbSwConformanceGroup OBJECT-GROUP
+        OBJECTS {
+                  tbSwComponentName,
+                  tbSwVersionDescription,
+                  tbSwVersionTag,
+                  tbSwPerfDescription,
+                  tbSwPerfCpuUsage,
+                  tbSwPerfMemoryUsage,
+                  tbSwPerfMemorySize
+                }
+        STATUS current
+        DESCRIPTION
+            "Elements required for conformance with TelcoBridges software tables."
+    ::= { tbGroups 5 }
+    tbMtp2ConformanceGroup OBJECT-GROUP
+        OBJECTS {
+                  tbMtp2LinkDescription,
+                  tbMtp2LinkStatus,
+                  tbMtp2TimeslotCount,
+                  tbMtp2TimeslotMask
+                }
+        STATUS current
+        DESCRIPTION
+            "Elements required for conformance with TelcoBridges SS7 MTP2 tables."
+    ::= { tbGroups 6 }
+    tbM2paConformanceGroup OBJECT-GROUP
+        OBJECTS {
+                  tbM2paLinkDescription,
+                  tbM2paLinkStatus,
+                  tbM2paLinkRXCurrentBandwidth,
+                  tbM2paLinkTXCurrentBandwidth,
+                  tbM2paLinkRXPeakBandwidth,
+                  tbM2paLinkTXPeakBandwidth
+                }
+        STATUS current
+        DESCRIPTION
+            "Elements required for conformance with TelcoBridges SS7 M2PA tables."
+    ::= { tbGroups 7 }
+    tbM2uaConformanceGroup OBJECT-GROUP
+        OBJECTS {
+                  tbM2uaLinkDescription,
+                  tbM2uaLinkStatus,
+                  tbM2uaLinkRxPdu,
+                  tbM2uaLinkTxPdu,
+                  tbM2uaLinkRxByte,
+                  tbM2uaLinkTxByte,
+                  tbM2uaPeerDescription,
+                  tbM2uaPeerState,
+                  tbM2uaPeerAspUp,
+                  tbM2uaPeerAspUpAck,
+                  tbM2uaPeerAspDwn,
+                  tbM2uaPeerAspDwnAck,
+                  tbM2uaPeerAspAct,
+                  tbM2uaPeerAspActAck,
+                  tbM2uaPeerAspInact,
+                  tbM2uaPeerAspInactAck,
+                  tbM2uaPeerHeartbeat,
+                  tbM2uaPeerHeartbeatAck,
+                  tbM2uaPeerNotify,
+                  tbM2uaPeerTxError,
+                  tbM2uaPeerRxError
+                }
+        STATUS current
+        DESCRIPTION
+            "Elements required for conformance with TelcoBridges SS7 M2UA tables."
+    ::= { tbGroups 8 }
+    tbIuaConformanceGroup OBJECT-GROUP
+        OBJECTS {
+                  tbIuaLinkDescription,
+                  tbIuaLinkStatus,
+                  tbIuaLinkRxPdu,
+                  tbIuaLinkTxPdu,
+                  tbIuaLinkRxByte,
+                  tbIuaLinkTxByte,
+                  tbIuaPeerDescription,
+                  tbIuaPeerState,
+                  tbIuaPeerRxAspUp,
+                  tbIuaPeerTxAspUp,
+                  tbIuaPeerRxAspDwn,
+                  tbIuaPeerTxAspDwn,
+                  tbIuaPeerRxAspAct,
+                  tbIuaPeerTxAspAct,
+                  tbIuaPeerRxAspInact,
+                  tbIuaPeerTxAspInact,
+                  tbIuaPeerRxNotify,
+                  tbIuaPeerTxNotify,
+                  tbIuaPeerRxError,
+                  tbIuaPeerTxError,
+                  tbIuaPeerRxPdu,
+                  tbIuaPeerTxPdu,
+                  tbIuaPeerRxByte,
+                  tbIuaPeerTxByte,
+                  tbIuaLapdDescription,
+                  tbIuaLapdStatus,
+                  tbIuaLapdRXCurrentBandwidth,
+                  tbIuaLapdTXCurrentBandwidth,
+                  tbIuaLapdRXPeakBandwidth,
+                  tbIuaLapdTXPeakBandwidth
+                }
+        STATUS current
+        DESCRIPTION
+            "Elements required for conformance with TelcoBridges IUA tables."
+    ::= { tbGroups 9 }
+    tbM3uaConformanceGroup OBJECT-GROUP
+        OBJECTS {
+                  tbM3uaGenDescription,
+                  tbM3uaGenModuleState,
+                  tbM3uaGenNetworkMax,
+                  tbM3uaGenNetworkCnt,
+                  tbM3uaGenUserpartMax,
+                  tbM3uaGenUserpartCnt,
+                  tbM3uaGenPSPMax,
+                  tbM3uaGenPSPCnt,
+                  tbM3uaGenPsrvMax,
+                  tbM3uaGenPsrvCnt,
+                  tbM3uaGenRouteMax,
+                  tbM3uaGenRouteCnt,
+                  tbM3uaGenSAPMax,
+                  tbM3uaGenSAPCnt,
+                  tbM3uaGenMemSize,
+                  tbM3uaGenMemAlloc,
+                  tbM3uaSapDescription,
+                  tbM3uaSapOpen,
+                  tbM3uaSapState,
+                  tbM3uaPspDescription,
+                  tbM3uaPspType,
+                  tbM3uaPspEndpointStatus1,
+                  tbM3uaPspEndpointStatus2,
+                  tbM3uaPspEndpointStatus3,
+                  tbM3uaPspEndpointStatus4,
+                  tbM3uaPsrvDescription,
+                  tbM3uaPsrvAsState
+                }
+        STATUS current
+        DESCRIPTION
+            "Elements required for conformance with TelcoBridges SS7 M3UA tables."
+        ::= { tbGroups 10 }
+    tbIsdnConformanceGroup OBJECT-GROUP
+        OBJECTS {
+                  tbIsdnNumber,
+                  tbIsdnDescription,
+                  tbIsdnDChannelUp,
+                  tbIsdnNbSecSinceLastUpEvent,
+                  tbIsdnRxValidFrame,
+                  tbIsdnRxFrameToStack,
+                  tbIsdnTxFrameFromStack,
+                  tbIsdnNbInitiated,
+                  tbIsdnInitiatedIncoming,
+                  tbIsdnInitiatedOutgoing,
+                  tbIsdnNbDisconnected,
+                  tbIsdnNbDisconnectedLocally,
+                  tbIsdnNbDisconnectedRemotely,
+                  tbIsdnMeanAsr,
+                  tbIsdnMeanBhca,
+                  tbIsdnNbAnsweredIncoming,
+                  tbIsdnNbAnsweredOutgoing,
+                  tbIsdnNbActive
+                }
+        STATUS current
+        DESCRIPTION
+            "Elements required for conformance with TelcoBridges Isdn tables."
+        ::= { tbGroups 11 }
+    tbCasConformanceGroup OBJECT-GROUP
+        OBJECTS {
+                  tbCasNumber,
+                  tbCasDescription,
+                  tbCasPhysicalLineUp,
+                  tbCasSignalingLineUp,
+                  tbCasIdleCnt,
+                  tbCasDownCnt,
+                  tbCasIncomingCnt,
+                  tbCasOutgoingCnt,
+                  tbCasLocallyBlockedCnt,
+                  tbCasRemotelyBlockedCnt
+                }
+        STATUS current
+        DESCRIPTION
+            "Elements required for conformance with TelcoBridges CAS tables."
+        ::= { tbGroups 12 }
+    tbSipConformanceGroup OBJECT-GROUP
+        OBJECTS {
+                  tbSipNumber,
+                  tbSipDescription,
+                  tbSipRequestInCnt,
+                  tbSipRequestOutCnt,
+                  tbSipResponseInCnt,
+                  tbSipResponseOutCnt,
+                  tbSipRequestRetryCnt,
+                  tbSipResponseRetryCnt,
+                  tbSipCongestionPeriodCnt,
+                  tbSipCriticalCongestionPeriodCnt,
+                  tbSipCallCongestionPeriodCnt,
+                  tbSipInCongestion,
+                  tbSipInCriticalCongestion,
+                  tbSipInCallCongestion,
+                  tbSipDecodeFailCnt,
+                  tbSipEncodeFailCnt,
+                  tbSipCurrentState
+                }
+        STATUS current
+        DESCRIPTION
+            "Elements required for conformance with TelcoBridges SIP tables."
+        ::= { tbGroups 13 }
+    tbH248ConformanceGroup OBJECT-GROUP
+        OBJECTS {
+                  tbH248MgcNumber,
+                  tbH248MgcName,
+                  tbH248MgcAddress,
+                  tbH248MgcCurrentState,
+                  tbH248DroppedCallsFromCongestionCnt,
+                  tbH248TotalMessagesSentCnt,
+                  tbH248TotalMessagesReceivedCnt,
+                  tbH248CurrNbOfOOSFixTermCnt,
+                  tbH248CurrNbOfISFixTermCnt,
+                  tbH248CurrNbOfActiveFixTermCnt,
+                  tbH248TotalNbOfActiveFixTermCnt,
+                  tbH248CurrNbOfEphTermCnt,
+                  tbH248TotalNbOfEphTermCreatedCnt,
+                  tbH248CurrNbOfActiveCntxCnt,
+                  tbH248TotalNbOfCntxCreatedCnt,
+                  tbH248Congestion
+                }
+        STATUS current
+        DESCRIPTION
+            "Elements required for conformance with TelcoBridges H248 informations."
+        ::= { tbGroups 14 }
+    tbCallsConformanceGroup OBJECT-GROUP
+        OBJECTS {
+                  tbCLegInCallCnt,
+                  tbCLegInCallCntInProgess,
+                  tbCLegInCallCntAnswered,
+                  tbCLegInCallCntTerminating,
+                  tbCLegInCallRate,
+                  tbCLegInCallRateHighest,
+                  tbCLegInCallRateAnswered,
+                  tbCLegInCallRateAnsweredHighest,
+                  tbCLegInTotalCall,
+                  tbCLegInTotalCallAnswered,
+                  tbCLegOutCallCnt,
+                  tbCLegOutCallCntInProgess,
+                  tbCLegOutCallCntAnswered,
+                  tbCLegOutCallCntTerminating,
+                  tbCLegOutCallRate,
+                  tbCLegOutCallRateHighest,
+                  tbCLegOutCallRateAnswered,
+                  tbCLegOutCallRateAnsweredHighest,
+                  tbCLegOutTotalCall,
+                  tbCLegOutTotalCallAnswered,
+                  tbCLegTotalCall,
+                  tbCLegTotalCallAnswered
+                }
+        STATUS current
+        DESCRIPTION
+            "Elements required for conformance with Calls informations."
+        ::= { tbGroups 15 }
+    tbNAPConformanceGroup OBJECT-GROUP
+        OBJECTS {
+                  tbNapNumber,
+                  tbNapName,
+                  tbNapSignalingType,
+                  tbNapInCallCnt,
+                  tbNapInCallCntInProgess,
+                  tbNapInCallCntAnswered,
+                  tbNapInCallCntTerminating,
+                  tbNapInCallRate,
+                  tbNapInCallRateHighest,
+                  tbNapInCallRateAnswered,
+                  tbNapInCallRateAnsweredHighest,
+                  tbNapOutCallCnt,
+                  tbNapOutCallCntInProgess,
+                  tbNapOutCallCntAnswered,
+                  tbNapOutCallCntTerminating,
+                  tbNapOutCallRate,
+                  tbNapOutCallRateHighest,
+                  tbNapOutCallRateAnswered,
+                  tbNapOutCallRateAnsweredHighest,
+                  tbNapAvailablePercent,
+                  tbNapUsagePercent,
+                  tbNapAvailableCnt,
+                  tbNapUnavailableCnt,
+                  tbNapInAsrGlobalAsrPercent,
+                  tbNapInAsrTotalCallCnt,
+                  tbNapInAsrTotalAnsweredCallCnt,
+                  tbNapInAsrLast24hAsrPercent,
+                  tbNapInAsrLast24hCallCnt,
+                  tbNapInAsrCurrentHourAsrPercent,
+                  tbNapInAsrCurrentHourCallCnt,
+                  tbNapInAsrLastHourAsrPercent,
+                  tbNapInAsrLastHourCallCnt,
+                  tbNapOutAsrGlobalAsrPercent,
+                  tbNapOutAsrTotalCallCnt,
+                  tbNapOutAsrTotalAnsweredCallCnt,
+                  tbNapOutAsrLast24hAsrPercent,
+                  tbNapOutAsrLast24hCallCnt,
+                  tbNapOutAsrCurrentHourAsrPercent,
+                  tbNapOutAsrCurrentHourCallCnt,
+                  tbNapOutAsrLastHourAsrPercent,
+                  tbNapOutAsrLastHourCallCnt,
+                  tbNapMediaOnlyCallCnt,
+                  tbNapMediaOnlyCallCntInProgress,
+                  tbNapMediaOnlyCallCntAnswered,
+                  tbNapMediaOnlyCallCntTerminating,
+                  tbNapAvailabilityDetectionPollRemoteProxy,
+                  tbNapAvailabilityDetectionAvailable,
+                  tbNapRegistrationRegisterToProxy,
+                  tbNapRegistrationRegistered
+                }
+        STATUS current
+        DESCRIPTION
+            "Elements required for conformance with NAP tables."
+        ::= { tbGroups 16 }
+    tbHaNp1Group OBJECT-GROUP
+        OBJECTS {
+                  tbHaNp1Number,
+                  tbHaNp1Name,
+                  tbHaNp1FunctionalState,
+                  tbHaNp1ReplacedUnit,
+                  tbHaNp1PriPatchPanelReady,
+                  tbHaNp1SecPatchPanelReady,
+                  tbHaNp1ExcessiveSwitch
+                }
+        STATUS current
+        DESCRIPTION
+            "Elements required for conformance with Ha N+1 tables."
+    ::= { tbGroups 17 }
+    tbHaAppGroup OBJECT-GROUP
+        OBJECTS {
+                  tbHaAppNumber,
+                  tbHaAppName,
+                  tbHaAppCurrentState,
+                  tbHaAppHaCurrentState,
+                  tbHaAppHostName
+                }
+        STATUS current
+        DESCRIPTION
+            "Elements required for conformance with Ha App tables."
+    ::= { tbGroups 18 }
+    tbClockGroup OBJECT-GROUP
+        OBJECTS {
+                  tbClockNumber,
+                  tbClockName,
+                  tbClockType,
+                  tbClockSource,
+                  tbClockGrade,
+                  tbClockActive,
+                  tbClockUnqualifiedReason
+                }
+        STATUS current
+        DESCRIPTION
+            "Elements required for conformance with Clock tables."
+    ::= { tbGroups 19 }
+    tbLineServicesUsageGroup OBJECT-GROUP
+        OBJECTS {
+                  tbLineServicesUsageNumber,
+                  tbLSULineServiceName,
+                  tbLSUInTotalCall,
+                  tbLSUInTotalCallAnswered,
+                  tbLSUOutTotalCall,
+                  tbLSUOutTotalCallAnswered,
+                  tbLSUMediaOnlyTotalCall,
+                  tbLSUIdle,
+                  tbLSUInProgress,
+                  tbLSUAccepted,
+                  tbLSUAlerted,
+                  tbLSUAnswered,
+                  tbLSUTerminating,
+                  tbLSUMediaOnlyUsed,
+                  tbLSUTsMaskStateIdle,
+                  tbLSUTsMaskStateInProgress,
+                  tbLSUTsMaskStateAccepted,
+                  tbLSUTsMaskStateAlerted,
+                  tbLSUTsMaskStateAnswered,
+                  tbLSUTsMaskStateTerminating,
+                  tbLSUTsMaskStateMediaOnlyUsed
+                }
+        STATUS current
+        DESCRIPTION
+            "Elements required for conformance with Line Services Usage tables."
+    ::= { tbGroups 20 }
+    
+    tbHostGroup OBJECT-GROUP
+        OBJECTS {
+                  tbHostNumber,
+                  tbHostName,
+                  tbHostState,
+                  tbHostUpdateAvailable,
+                  tbHostOamMode,
+                  tbHostRole,
+                  tbHostOamState,
+                  tbHostPackage,
+                  tbHostMemoryUsedPercentage,
+                  tbHostSwapUsedPercentage,
+                  tbHostDiskFull,
+                  tbHostCpuUsedPercentage,
+                  tbHostToolpackVersion,
+                  tbHostActiveConfiguration,
+                  tbHostComponentCurrentlyUpdating
+                }
+        STATUS current
+        DESCRIPTION
+            "Elements required for conformance with Host tables."
+    ::= { tbGroups 21 }    
+    
+    tbHostFeatureGroup OBJECT-GROUP
+        OBJECTS {
+                  tbHostFeatureNumber,
+                  tbHostFeatureType,
+                  tbHostFeatureExpired,
+                  tbHostFeatureAboutToExpire,
+                  tbHostFeatureExpireDate,
+                  tbHostFeatureExpireTime,
+                  tbHostFeatureEffectiveFeatureCnt
+                }
+        STATUS current
+        DESCRIPTION
+            "Elements required for conformance with Host feature tables."
+    ::= { tbGroups 22 }
+    
+    tbHostFirewallGroup OBJECT-GROUP
+        OBJECTS {
+                  tbHostFirewallNumber,
+                  tbHostFirewallName,
+                  tbHostFirewallState,
+                  tbHostFirewallSafeMode,
+                  tbHostFirewallSchedulingProblem,
+                  tbHostFirewallDDOS,
+                  tbHostFirewallThresholdPassed,
+                  tbHostFirewallHighCpu,
+                  tbHostFirewallStatDropEntryPct,
+                  tbHostFirewallStatAcceptEntryPct,
+                  tbHostFirewallStatFragmentEntryPct,
+                  tbHostFirewallStatRtpEntryPct,
+                  tbHostFirewallStatUnkVlan,
+                  tbHostFirewallStatUnkInterface,
+                  tbHostFirewallStatRxByte,
+                  tbHostFirewallStatRxAcceptedByte,
+                  tbHostFirewallStatTxByte,
+                  tbHostFirewallStatRxKbPerSec,
+                  tbHostFirewallStatRxAccKbPerSec,
+                  tbHostFirewallStatTxKbPerSec,
+                  tbHostFirewallStatRxPeakKbPerSec,
+                  tbHostFirewallStatRxAccPeakKbPerSec,
+                  tbHostFirewallStatTxPeakKbPerSec,
+                  tbHostFirewallStatRxPkt,
+                  tbHostFirewallStatRxAccPkt,
+                  tbHostFirewallStatTxPkt,
+                  tbHostFirewallStatRxPktPerSec,
+                  tbHostFirewallStatRxAccPktPerSec,
+                  tbHostFirewallStatTxPktPerSec,
+                  tbHostFirewallStatRxPeakPktPerSec,
+                  tbHostFirewallStatRxAccPeakPktPerSec,
+                  tbHostFirewallStatTxPeakPktPerSec,
+                  tbHostFirewallStatRxArpPkt,
+                  tbHostFirewallStatRxArpPktPerSec,
+                  tbHostFirewallStatRxArpPeakPktPerSec,
+                  tbHostFirewallStatRxDhcpPkt,
+                  tbHostFirewallStatRxDhcpPktPerSec,
+                  tbHostFirewallStatRxDhcpPeakPktPerSec,
+                  tbHostFirewallStatRxIcmpPkt,
+                  tbHostFirewallStatRxIcmpPktPerSec,
+                  tbHostFirewallStatRxIcmpPeakPktPerSec,
+                  tbHostFirewallStatRxL2BroadcastPkt,
+                  tbHostFirewallStatRxL2UnsupportedPkt,
+                  tbHostFirewallStatRxMulticastIpPkt,
+                  tbHostFirewallStatRxIpFragments,
+                  tbHostFirewallStatRxDroppedIpFragments,
+                  tbHostFirewallStatRxInvalidIpv4Size,
+                  tbHostFirewallStatRtpRxPkt,
+                  tbHostFirewallStatRtpTxPkt,
+                  tbHostFirewallStatRtpRxVoicePkt,
+                  tbHostFirewallStatRtpTxVoicePkt,
+                  tbHostFirewallStatRtpRxTelephonyEventPkt,
+                  tbHostFirewallStatRtpTxTelephonyEventPkt,
+                  tbHostFirewallStatRtpRxNsePkt,
+                  tbHostFirewallStatRtpTxNsePkt,
+                  tbHostFirewallStatRtpRxComfortNoisePkt,
+                  tbHostFirewallStatRtpTxComfortNoisePkt,
+                  tbHostFirewallStatRtpRxPayloadTypeChange,
+                  tbHostFirewallStatRtpRxSsrcChange,
+                  tbHostFirewallStatRtpRxSeqError,
+                  tbHostFirewallStatRtpRxBadPkt,
+                  tbHostFirewallStatRtcpRxPkt,
+                  tbHostFirewallStatRtcpRxLostPkt,
+                  tbHostFirewallStatRtcpRxBadPkt,
+                  tbHostFirewallStatRtcpTxPkt,
+                  tbHostFirewallStatUdptlRxPkt,
+                  tbHostFirewallStatUdptlSeqError,
+                  tbHostFirewallStatUdptlBadPkt,
+                  tbHostFirewallStatUdptlTxPkt
+                }
+        STATUS current
+        DESCRIPTION
+            "Elements required for conformance with Host Firewall tables."
+    ::= { tbGroups 23 }
+
+    -- Compliance groups defined by TelcoBridges Inc. --
+    tbCompliance1 MODULE-COMPLIANCE
+        STATUS current
+        DESCRIPTION
+            "Compliance for TB Mib"
+        MODULE  -- TB-MIB module (this module)
+        MANDATORY-GROUPS {
+                           tbModuleConformanceGroup,
+                           tbMIBObjectsConformanceGroup,
+                           tbHwConformanceGroup,
+                           tbFeatureConformanceGroup,
+                           tbSwConformanceGroup,
+                           tbMtp2ConformanceGroup,
+                           tbM2paConformanceGroup,
+                           tbM2uaConformanceGroup,
+                           tbIuaConformanceGroup,
+                           tbM3uaConformanceGroup,
+                           tbIsdnConformanceGroup,
+                           tbCasConformanceGroup,
+                           tbSipConformanceGroup,
+                           tbH248ConformanceGroup,
+                           tbCallsConformanceGroup,
+                           tbNAPConformanceGroup,
+                           tbHaNp1Group,
+                           tbHaAppGroup,
+                           tbClockGroup,
+                           tbLineServicesUsageGroup,
+                           tbHostGroup,
+                           tbHostFeatureGroup,
+                           tbHostFirewallGroup
+                         }
+        ::= { tbCompliance 1 }
+
+
+
+        
+END
