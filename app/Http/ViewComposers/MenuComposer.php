@@ -64,7 +64,7 @@ class MenuComposer
         $vars = [];
         /** @var User $user */
         $user = Auth::user();
-        $site_style = Config::get('applied_site_style');
+        $site_style = session('applied_site_style');
 
         //global Settings
         $vars['hide_dashboard_editor'] = UserPref::getPref($user, 'hide_dashboard_editor');
@@ -74,7 +74,6 @@ class MenuComposer
         $vars['navbar'] = in_array($site_style, ['mono']) ? 'navbar-inverse' : '';
 
         $vars['project_name'] = Config::get('project_name', 'LibreNMS');
-        $vars['title_image'] = Config::get('title_image', "images/librenms_logo_$site_style.svg");
 
         //Dashboards
         $vars['dashboards'] = Dashboard::select('dashboard_id', 'dashboard_name')->allAvailable($user)->orderBy('dashboard_name')->get();

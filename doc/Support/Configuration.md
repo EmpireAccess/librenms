@@ -1,12 +1,18 @@
 # Configuration Docs
 
-LibreNMS configuration is a set of key values.
+LibreNMS configuration is a set of key/value pairs.
 
-The config is stored in two places:
-Database: This applies to all pollers and can be set with either `lnms config:set` or in the Web UI. Database config takes precedence over config.php.
-config.php: This applies to the local poller only.  Configs set here will be disabled in the Web UI to prevent unexpected behaviour.
+## Configuration location
+Configuration is stored in one of two places:
+Database: This applies to all pollers and can be set with either `lnms config:set` 
+or in the Web UI. Database config takes precedence over `config.php`.
+`config.php`: This applies to the local poller only.  Configs set here will be 
+disabled in the Web UI to prevent unexpected behaviour.
 
-The LibreNMS uses dot notation for config items:
+## Configuration format
+For configuration stored within the database, LibreNMS uses dot notation for config
+items. For `config.php` this is  stored as a php array under `$config`, some snmp 
+configuration as an example:
 
 | Database | config.php |
 | -------- | ---------- |
@@ -14,15 +20,17 @@ The LibreNMS uses dot notation for config items:
 | `snmp.community.+` | `$config['snmp']['community'][]` |
 | `snmp.v3.0.authalgo` | `$config['snmp']['v3'][0]['authalgo']` |
 
-> The documentation has not been updated to reflect using `lnms config:set` to
-> set config items, but it will work for all settings.  Not all settings have
-> been defined in LibreNMS, but they can still be set with the `--ignore-checks`
-> option.  Without that option input is checked for correctness, that does not
-> mean it is not possible to set bad values.  Please report missing settings.
+> Not all documentation has been updated to reflect using `lnms config:set` to
+> set configuration items, but it will work and is the preferred option over `config.php`.
+> Not all configuration settings have been defined in LibreNMS, they can still be 
+> set with the `--ignore-checks` option.  Without that option input is checked for 
+> validity, that does not mean it is not possible to set bad values. 
+> Please report missing settings.
 
 ## CLI
 `lnms config:get` will fetch the current config settings (composite of database, config.php, and defaults).  
-`lnms config:set` will set the config setting in the database.  Calling `lnms config:set` on a setting with no value will reset it to the default value.
+`lnms config:set` will set the config setting in the database.
+Calling `lnms config:set` on a setting with no value will reset it to the default value.
 
 If you set up bash completion, you can use tab completion to find config settings.
 
@@ -124,8 +132,6 @@ lnms config:set snmp.community \
 '
 ```
 
-
-
 ## Pre-load configuration
 
 This feature is primarily for docker images and other automation.
@@ -143,7 +149,7 @@ snmp.max_repeaters: 30
 **CAUTION**: The above example uses the correct, flattened notation whereas you might be tempted to create a
 block for `snmp` with sub-keys `community` and `max_repeaters`.  Do **NOT** do this as the whole `snmp`
 block will be overwritten, replaced with only those two sub-keys.  The config keys in your `seeders` file
-must match those specified in `misc/config_definitions.json`.
+must match those specified in `resources/definitions/config_definitions.json`.
 
 ## Directories
 
@@ -187,7 +193,7 @@ DB_SOCKET=/run/mysqld/mysqld.sock
 
 ### PHP Settings
 
-You can change the memory limits for php within `config.php`. The
+You can change the memory limits for php within LibreNMS. The
 value is in Megabytes and should just be an int value:
 
 `lnms config:set php_memory_limit 128`
@@ -195,7 +201,7 @@ value is in Megabytes and should just be an int value:
 ### Programs
 
 A lot of these are self explanatory so no further information may be
-provided. Any extensions that have dedicated  documentation page will
+provided. Any extensions that have dedicated documentation page will
 be linked to rather than having the config provided.
 
 #### RRDTool
@@ -504,7 +510,7 @@ lnms config:set device_traffic_iftype.+ '/loopback/'
 ```
 
 Interface types that aren't graphed in the WebUI. The default array
-contains more items, please see misc/config_definitions.json for the full list.
+contains more items, please see resources/definitions/config_definitions.json for the full list.
 
 ```bash
 lnms config:set enable_clear_discovery true
@@ -682,6 +688,12 @@ What type of mail transport to use for delivering emails. Valid
 options for `email_backend` are mail, sendmail or smtp. The varying
 options after that are to support the different transports.
 
+For security reasons, the SMTP server connection via TLS will try to verify the validity of the certificate. If for some reason you need to disable verification, you can use the email_smtp_verifypeer option (true by default) and email_smtp_allowselfsigned (false by default).
+```bash
+    lnms config:set email_smtp_verifypeer false
+    lnms config:set email_smtp_allowselfsigned true
+```
+
 ## Alerting
 
 Please refer to [Alerting](../Alerting/index.md)
@@ -746,7 +758,7 @@ lnms config:set collectd_dir /var/lib/collectd/rrd
 ```
 
 Specify the location of the collectd rrd files. Note that the location
-in config.php should be consistent with the location set in
+in LibreNMS should be consistent with the location set in
 /etc/collectd.conf and etc/collectd.d/rrdtool.conf
 
 ```bash
@@ -858,8 +870,8 @@ Interfaces can be automatically ignored during discovery by modifying
 bad_if\* entries in a default array, unsetting a default array and
 customizing it, or creating an OS specific array. The preferred method
 for ignoring interfaces is to use an OS specific array. The default
-arrays can be found in misc/config_definitions.json. OS specific
-definitions (includes/definitions/\_specific_os_.yaml) can contain
+arrays can be found in resources/definitions/config_definitions.json. OS specific
+definitions (resources/definitions/os_detection/\_specific_os_.yaml) can contain
 bad_if\* arrays, but should only be modified via pull-request as
 manipulation of the definition files will block updating:
 

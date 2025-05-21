@@ -27,11 +27,13 @@ use App\Models\Location;
 use App\Models\MplsSap;
 use App\Models\MplsService;
 use App\Models\OspfPort;
+use App\Models\Ospfv3Nbr;
 use App\Models\Ospfv3Port;
 use App\Models\PollerGroup;
 use App\Models\Port;
 use App\Models\PortGroup;
 use App\Models\PortsFdb;
+use App\Models\PortsNac;
 use App\Models\Sensor;
 use App\Models\ServiceTemplate;
 use App\Models\UserPref;
@@ -499,7 +501,9 @@ function del_device(Illuminate\Http\Request $request)
 
 function maintenance_device(Illuminate\Http\Request $request)
 {
-    if (empty($request->json())) {
+    $data = $request->json()->all();
+
+    if (empty($data)) {
         return api_error(400, 'No information has been provided to set this device into maintenance');
     }
 
@@ -512,27 +516,27 @@ function maintenance_device(Illuminate\Http\Request $request)
         return api_error(404, "Device $hostname not found");
     }
 
-    if (! $request->json('duration')) {
+    if (empty($data['duration'])) {
         return api_error(400, 'Duration not provided');
     }
 
-    $notes = $request->json('notes');
-    $title = $request->json('title') ?? $device->displayName();
+    empty($data['notes']) ? $notes = '' : $notes = $data['notes'];
+    $title = $data['title'] ?? $device->displayName();
     $alert_schedule = new \App\Models\AlertSchedule([
         'title' => $title,
         'notes' => $notes,
         'recurring' => 0,
     ]);
 
-    $start = $request->json('start') ?? \Carbon\Carbon::now()->format('Y-m-d H:i:00');
+    $start = $data['start'] ?? \Carbon\Carbon::now()->format('Y-m-d H:i:00');
     $alert_schedule->start = $start;
 
-    $duration = $request->json('duration');
+    $duration = $data['duration'];
 
     if (Str::contains($duration, ':')) {
         [$duration_hour, $duration_min] = explode(':', $duration);
         $alert_schedule->end = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $start)
-            ->addHours($duration_hour)->addMinutes($duration_min)
+            ->addHours((float) $duration_hour)->addMinutes((float) $duration_min)
             ->format('Y-m-d H:i:00');
     }
 
@@ -544,7 +548,7 @@ function maintenance_device(Illuminate\Http\Request $request)
         $device->save();
     }
 
-    if ($request->json('start')) {
+    if (isset($data['start'])) {
         return api_success_noresult(201, "Device {$device->hostname} ({$device->device_id}) will begin maintenance mode at $start" . ($duration ? " for {$duration}h" : ''));
     } else {
         return api_success_noresult(201, "Device {$device->hostname} ({$device->device_id}) moved into maintenance mode" . ($duration ? " for {$duration}h" : ''));
@@ -845,7 +849,7 @@ function list_ospfv3(Illuminate\Http\Request $request)
     $hostname = $request->get('hostname');
     $device_id = \App\Facades\DeviceCache::get($hostname)->device_id;
 
-    $ospf_neighbours = \App\Models\OspfNbr::whereHasAccess(Auth::user())
+    $ospf_neighbours = Ospfv3Nbr::hasAccess(Auth::user())
         ->when($device_id, fn ($q) => $q->where('device_id', $device_id))
         ->whereNotNull('ospfv3NbrState')->where('ospfv3NbrState', '!=', '')
         ->get();
@@ -854,18 +858,22 @@ function list_ospfv3(Illuminate\Http\Request $request)
         return api_error(500, 'Error retrieving ospfv3_nbrs');
     }
 
-    return api_success($ospf_neighbours, 'ospfv3_neighbours');
+    return api_success($ospf_neighbours, 'ospfv3_neighbours', count: $ospf_neighbours->count());
 }
 
 function list_ospfv3_ports(Illuminate\Http\Request $request)
 {
+    $hostname = $request->get('hostname');
+    $device_id = \App\Facades\DeviceCache::get($hostname)->device_id;
+
     $ospf_ports = Ospfv3Port::hasAccess(Auth::user())
-              ->get();
+        ->when($device_id, fn ($q) => $q->where('device_id', $device_id))
+        ->get();
     if ($ospf_ports->isEmpty()) {
         return api_error(404, 'Ospfv3 ports do not exist');
     }
 
-    return api_success($ospf_ports, 'ospfv3_ports', null, 200, $ospf_ports->count());
+    return api_success($ospf_ports, 'ospfv3_ports', count: $ospf_ports->count());
 }
 
 function get_graph_by_portgroup(Request $request)
@@ -2506,7 +2514,9 @@ function get_device_groups(Illuminate\Http\Request $request)
 
 function maintenance_devicegroup(Illuminate\Http\Request $request)
 {
-    if (empty($request->json())) {
+    $data = $request->json()->all();
+
+    if (empty($data)) {
         return api_error(400, 'No information has been provided to set this device into maintenance');
     }
 
@@ -2521,35 +2531,34 @@ function maintenance_devicegroup(Illuminate\Http\Request $request)
         return api_error(404, "Device group $name not found");
     }
 
-    if (! $request->json('duration')) {
+    if (empty($data['duration'])) {
         return api_error(400, 'Duration not provided');
     }
 
-    $notes = $request->json('notes');
-    $title = $request->json('title') ?? $device_group->name;
-
+    $notes = $data['notes'] ?? '';
+    $title = $data['title'] ?? $device_group->name;
     $alert_schedule = new \App\Models\AlertSchedule([
         'title' => $title,
         'notes' => $notes,
         'recurring' => 0,
     ]);
 
-    $start = $request->json('start') ?? \Carbon\Carbon::now()->format('Y-m-d H:i:00');
+    $start = $data['start'] ?? \Carbon\Carbon::now()->format('Y-m-d H:i:00');
     $alert_schedule->start = $start;
 
-    $duration = $request->json('duration');
+    $duration = $data['duration'];
 
     if (Str::contains($duration, ':')) {
         [$duration_hour, $duration_min] = explode(':', $duration);
         $alert_schedule->end = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', $start)
-            ->addHours($duration_hour)->addMinutes($duration_min)
+            ->addHours((float) $duration_hour)->addMinutes((float) $duration_min)
             ->format('Y-m-d H:i:00');
     }
 
     $alert_schedule->save();
     $alert_schedule->deviceGroups()->attach($device_group);
 
-    if ($request->json('start')) {
+    if (isset($data['start'])) {
         return api_success_noresult(201, "Device group {$device_group->name} ({$device_group->id}) will begin maintenance mode at $start" . ($duration ? " for {$duration}h" : ''));
     } else {
         return api_success_noresult(201, "Device group {$device_group->name} ({$device_group->id}) moved into maintenance mode" . ($duration ? " for {$duration}h" : ''));
@@ -2775,6 +2784,26 @@ function get_fdb(Illuminate\Http\Request $request)
     });
 }
 
+function get_nac(Illuminate\Http\Request $request)
+{
+    $hostname = $request->route('hostname');
+
+    if (empty($hostname)) {
+        return api_error(500, 'No hostname has been provided');
+    }
+
+    $device = \App\Facades\DeviceCache::get($hostname);
+    if (! $device->exists) {
+        return api_error(404, "Device $hostname not found");
+    }
+
+    return check_device_permission($device_id, function () use ($device) {
+        $nac = $device->portsNac;
+
+        return api_success($nac, 'ports_nac');
+    });
+}
+
 function get_transceivers(Illuminate\Http\Request $request)
 {
     $hostname = $request->route('hostname');
@@ -2839,6 +2868,23 @@ function list_fdb_detail(Illuminate\Http\Request $request)
     }
 
     return api_success($fdb, 'ports_fdb', null, 200, count($fdb), $extras);
+}
+
+function list_nac(Illuminate\Http\Request $request)
+{
+    $mac = $request->route('mac');
+
+    $nac = PortsNac::hasAccess(Auth::user())
+           ->when(! empty($mac), function (Builder $query) use ($mac) {
+               return $query->where('mac_address', $mac);
+           })
+           ->get();
+
+    if ($nac->isEmpty()) {
+        return api_error(404, ' Nac entry does not exist');
+    }
+
+    return api_success($nac, 'ports_nac');
 }
 
 function list_sensors()

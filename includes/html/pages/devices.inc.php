@@ -278,7 +278,7 @@ if ($format == 'graph') {
     $state = isset($vars['state']) ? $vars['state'] : '';
     $state_selection = "<select name='state' id='state' class='form-control'><option value=''>All</option>" .
         "<option value='up'" . ($state == 'up' ? ' selected' : '') . '>Up</option>' .
-        "<option value='down'" . ($state == 'down' ? ' selected' : '') . '>Down</option><select>';
+        "<option value='down'" . ($state == 'down' ? ' selected' : '') . '>Down</option></select>';
 
     $features_selected = isset($vars['features']) ? json_encode(['id' => $vars['features'], 'text' => $vars['features']]) : '""';
     $hardware_selected = isset($vars['hardware']) ? json_encode(['id' => $vars['hardware'], 'text' => $vars['hardware']]) : '""';
@@ -308,7 +308,7 @@ if ($format == 'graph') {
     </div>
     <div class="table-responsive">
         <?php show_device_group($vars['group']); ?>
-        <table id="devices" class="table table-hover table-condensed table-striped">
+        <table id="devices" class="table table-hover table-condensed table-striped" data-ajaxurl="<?php echo url('/ajax/table/device') ?>">
             <thead>
                 <tr>
                     <th data-column-id="status" data-formatter="status" data-width="7px" data-searchable="false"><?php echo $detailed ? 'S.' : 'Status'; ?></th>
@@ -380,7 +380,7 @@ if ($format == 'graph') {
                     device_id: '<?php echo htmlspecialchars($vars['device_id'] ?? ''); ?>',
                 };
             },
-            url: "<?php echo url('/ajax/table/device') ?>"
+            url: $("#devices").data("ajaxurl"),
         });
 
         <?php

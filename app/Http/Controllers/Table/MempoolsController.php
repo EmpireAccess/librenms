@@ -75,7 +75,7 @@ class MempoolsController extends TableController
     {
         if ($mempool instanceof Device) {
             $device = $mempool;
-            $graphs = \LibreNMS\Util\Html::graphRow([
+            $graphs = Html::graphRow([
                 'device' => $device->device_id,
                 'type' => 'device_mempool',
                 'height' => 100,
@@ -135,5 +135,46 @@ class MempoolsController extends TableController
         $link = Url::generate(['page' => 'graphs'], Arr::only($graph, ['id', 'type', 'from']));
 
         return Url::overlibLink($link, $percent, Url::graphTag($graph));
+    }
+
+    /**
+     * Get headers for CSV export
+     *
+     * @return array
+     */
+    protected function getExportHeaders()
+    {
+        return [
+            'Device ID',
+            'Hostname',
+            'Description',
+            'Used',
+            'Free',
+            'Total',
+            'Percentage',
+            'Warning Threshold',
+        ];
+    }
+
+    /**
+     * Format a row for CSV export
+     *
+     * @param  Mempool  $mempool
+     * @return array
+     */
+    protected function formatExportRow($mempool)
+    {
+        $is_percent = $mempool->mempool_total == 100;
+
+        return [
+            'device_id' => $mempool->device_id,
+            'hostname' => $mempool->device->displayName(),
+            'description' => $mempool->mempool_descr,
+            'used' => $is_percent ? $mempool->mempool_used : Number::formatBi($mempool->mempool_used),
+            'free' => $is_percent ? $mempool->mempool_free : Number::formatBi($mempool->mempool_free),
+            'total' => $is_percent ? $mempool->mempool_total : Number::formatBi($mempool->mempool_total),
+            'percentage' => $mempool->mempool_perc . '%',
+            'warning_threshold' => $mempool->mempool_perc_warn ?? '-',
+        ];
     }
 }

@@ -31,10 +31,11 @@ $pagetitle[] = 'Health :: Processor';
         </div>
     </div>
     <div class="table-responsive">
-        <table id="processor" class="table table-hover table-condensed processor">
+        <table id="processor" class="table table-hover table-condensed processor"
+                data-ajaxurl="<?php echo url('/ajax/table/processors') ?>">
             <thead>
                 <tr>
-                    <th data-column-id="hostname">Device</th>
+                    <th data-column-id="device_hostname">Device</th>
                     <th data-column-id="processor_descr">Processor</th>
                     <th data-column-id="graph" data-sortable="false" data-searchable="false"></th>
                     <th data-column-id="processor_usage" data-searchable="false">Usage</th>
@@ -50,10 +51,9 @@ $pagetitle[] = 'Health :: Processor';
         post: function ()
         {
             return {
-                id: "processor",
                 view: '<?php echo htmlspecialchars($vars['view']); ?>'
             };
         },
-        url: "ajax_table.php"
+        url: "<?php echo route('table.processors') ?>"
     });
 </script>

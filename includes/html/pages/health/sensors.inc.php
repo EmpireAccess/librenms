@@ -78,15 +78,25 @@ switch ($class) {
             </div>
 
             <div class="pull-right">
-                <?php echo $displayoptions; ?>
+                    <?php echo $displayoptions; ?>
             </div>
         </div>
     </div>
     <div class="table-responsive">
-        <table id="sensors" class="table table-hover table-condensed storage">
+        <table id="sensors" class="table table-hover table-condensed storage"
+                data-ajaxurl="<?php echo url('/ajax/table/sensors', ['class' => $class]); ?>">
             <thead>
+                <tr>
+                    <th data-column-id="hostname">Device</th>
+                    <th data-column-id="sensor_descr">Sensor</th>
+                    <th data-column-id="graph" data-sortable="false" data-searchable="false"></th>
+                    <th data-column-id="alert" data-sortable="false" data-searchable="false"></th>
+                    <th data-column-id="sensor_current">Current</th>
+                    <th data-column-id="sensor_limit_low" data-searchable="false">Low Limit</th>
+                    <th data-column-id="sensor_limit" data-searchable="false">High Limit</th>
+                </tr>
             <tr>
-                <th data-column-id="hostname">Device</th>
+                <th data-column-id="device_hostname">Device</th>
                 <th data-column-id="sensor_descr">Sensor</th>
                 <th data-column-id="graph" data-sortable="false" data-searchable="false"></th>
                 <th data-column-id="alert" data-sortable="false" data-searchable="false"></th>
@@ -104,13 +114,10 @@ switch ($class) {
         rowCount: [50, 100, 250, -1],
         post: function () {
             return {
-                id: 'sensors',
                 view: '<?php echo htmlspecialchars($vars['view']); ?>',
-                graph_type: '<?php echo htmlspecialchars($graph_type); ?>',
-                unit: '<?php echo htmlspecialchars($unit); ?>',
                 class: '<?php echo htmlspecialchars($class); ?>'
             };
         },
-        url: "ajax_table.php"
+        url: "<?php echo route('table.sensors') ?>"
     });
 </script>

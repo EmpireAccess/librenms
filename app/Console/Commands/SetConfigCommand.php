@@ -34,12 +34,7 @@ class SetConfigCommand extends LnmsCommand
         $this->addOption('ignore-checks');
     }
 
-    /**
-     * Execute the console command.
-     *
-     * @return mixed
-     */
-    public function handle(DynamicConfig $definition)
+    public function handle(DynamicConfig $definition): int
     {
         $setting = $this->argument('setting');
         $value = $this->argument('value');
@@ -209,12 +204,12 @@ class SetConfigCommand extends LnmsCommand
      * @param  string  $setting
      * @param  mixed  $value
      *
-     * @throws \JsonSchema\Exception\ValidationException
+     * @throws ValidationException
      */
     private function validateOsSetting(string $os, string $setting, $value)
     {
         // prep data to be validated
-        $os_data = \LibreNMS\Config::get("os.$os");
+        $os_data = Config::get("os.$os");
         if ($os_data === null) {
             throw new ValidationException(trans('commands.config:set.errors.invalid_os', ['os' => $os]));
         }
@@ -234,7 +229,7 @@ class SetConfigCommand extends LnmsCommand
         $validator = new Validator;
         $validator->validate(
             $os_data,
-            (object) ['$ref' => 'file://' . base_path('/misc/os_schema.json')],
+            (object) ['$ref' => 'file://' . resource_path('definitions/schema/os_schema.json')],
             Constraint::CHECK_MODE_TYPE_CAST
         );
 

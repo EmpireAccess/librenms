@@ -156,7 +156,7 @@ class ModuleTestHelper
                     $data = \SnmpQuery::options($snmp_options)->context($context)->mibDir($oid_data['mibdir'] ?? null)->next($oid_data['oid']);
                 }
 
-                if (isset($data) && $data->isValid()) {
+                if (isset($data) && $data->getExitCode() === 0) {
                     $snmprec_data[] = $this->convertSnmpToSnmprec($data);
                 }
             }
@@ -298,7 +298,7 @@ class ModuleTestHelper
 
         if (! Str::contains($full_name, '_')) {
             return [$full_name, ''];
-        } elseif (is_file(Config::get('install_dir') . "/includes/definitions/$full_name.yaml")) {
+        } elseif (is_file(resource_path("definitions/os_detection/$full_name.yaml"))) {
             return [$full_name, ''];
         } else {
             [$rvar, $ros] = explode('_', strrev($full_name), 2);
@@ -363,7 +363,7 @@ class ModuleTestHelper
     private function convertSnmpToSnmprec(SnmpResponse $snmp_data): array
     {
         $result = [];
-        foreach (explode(PHP_EOL, $snmp_data->raw) as $line) {
+        foreach (explode(PHP_EOL, $snmp_data->getRawWithoutBadLines()) as $line) {
             if (empty($line)) {
                 continue;
             }
@@ -546,9 +546,9 @@ class ModuleTestHelper
         Config::set('rrdtool_version', '1.7.2'); // don't detect rrdtool version, rrdtool is not install on ci
 
         // don't allow external DNS queries that could fail
-        app()->bind(\LibreNMS\Util\AutonomousSystem::class, function ($app, $parameters) {
+        app()->bind(AutonomousSystem::class, function ($app, $parameters) {
             $asn = $parameters['asn'] ?? '?';
-            $mock = \Mockery::mock(\LibreNMS\Util\AutonomousSystem::class);
+            $mock = \Mockery::mock(AutonomousSystem::class);
             $mock->shouldReceive('name')->withAnyArgs()->zeroOrMoreTimes()->andReturnUsing(function () use ($asn) {
                 return "AS$asn-MOCK-TEXT";
             });
@@ -560,8 +560,8 @@ class ModuleTestHelper
             throw new FileNotFoundException("$this->snmprec_file does not exist!");
         }
 
-        // Remove existing device in case it didn't get removed previously
-        if (($existing_device = device_by_name($snmpSimIp)) && isset($existing_device['device_id'])) {
+        // Remove existing device in case it didn't get removed previously, if we're not running in CI
+        if (! getenv('CI') && ($existing_device = device_by_name($snmpSimIp)) && isset($existing_device['device_id'])) {
             delete_device($existing_device['device_id']);
         }
 
@@ -646,8 +646,9 @@ class ModuleTestHelper
         // Dump polled data
         $data = array_merge_recursive($data, $this->dumpDb($device_id, $polled_modules, 'poller'));
 
-        // Remove the test device, we don't need the debug from this
-        if ($device['hostname'] == $snmpSimIp) {
+        // Remove the test device, if we're not running in CI
+        if (! getenv('CI') && $device['hostname'] == $snmpSimIp) {
+            // we don't need the debug from this
             Debug::set(false);
             delete_device($device_id);
         }
