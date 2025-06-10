@@ -76,10 +76,10 @@ modules:
                     descr: 'Input #{{ $index }} Voltage'
                     index: 'upsInputGroupVoltage.{{ $index }}'
                     divisor: 10
-                    low_limit: 180
-                    low_warn_limit: 200
-                    warn_limit: 235
-                    high_limit: 240
+                    low_limit: 110
+                    low_warn_limit: 113
+                    warn_limit: 125
+                    high_limit: 130
                 -
                     oid: upsOutputGroupTable
                     value: upsOutputGroupVoltage
@@ -87,10 +87,10 @@ modules:
                     descr: 'Output #{{ $index }} Voltage'
                     index: 'upsOutputGroupVoltage.{{ $index }}'
                     divisor: 10
-                    low_limit: 200
-                    low_warn_limit: 210
-                    warn_limit: 230
-                    high_limit: 235
+                    low_limit: 110
+                    low_warn_limit: 113
+                    warn_limit: 125
+                    high_limit: 130
                 -
                     oid: upsBatteryGroup
                     value: upsBatteryGroupVoltage
